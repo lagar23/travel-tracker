@@ -1,4 +1,5 @@
 import { getSupabase } from './auth.js';
+import { isTripBooked } from './utils.js';
 
 // YYYYMMDD → YYYY-MM-DD (for Supabase)
 function toIso(ymd) {
@@ -27,22 +28,10 @@ function tripToApp(row) {
     flight_out: row.flight_out,
     accom:    row.accom,
     // derive booked for backwards compat with calendar render
-    booked: row.flight_in || row.flight_out || row.accom
-      ? (legBooked(row.flight_in) && legBooked(row.flight_out) && accomBooked(row.accom))
-      : false,
+    booked: isTripBooked({ flight_in: row.flight_in, flight_out: row.flight_out, accom: row.accom }),
   };
 }
 
-function legBooked(leg) {
-  if (!leg) return true;
-  if (leg.confirmed !== null && leg.confirmed !== undefined) return leg.confirmed;
-  return !!leg.booking_ref;
-}
-function accomBooked(accom) {
-  if (!accom) return true;
-  if (accom.booked !== null && accom.booked !== undefined) return accom.booked;
-  return !!accom.booking_ref;
-}
 
 function eventToApp(row) {
   return {
@@ -71,6 +60,7 @@ export async function getTrips() {
 export async function saveTrip(trip) {
   const sb = getSupabase();
   const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
   const row = {
     user_id:    session.user.id,
     label:      trip.label,
@@ -116,6 +106,7 @@ export async function getEvents() {
 export async function saveEvent(event) {
   const sb = getSupabase();
   const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
   const row = {
     user_id:    session.user.id,
     label:      event.label,
