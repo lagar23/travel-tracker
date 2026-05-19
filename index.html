@@ -531,7 +531,7 @@ function saveData() { localStorage.setItem('travel-2026', JSON.stringify(DATA));
 let DATA = loadData();
 // view state: year + month (0-indexed) of top-left
 let viewYear = TODAY.getFullYear();
-let viewMonth = 0; // start at January for full-year view
+let viewMonth = TODAY.getMonth();
 let viewMonths = 6;
 let summaryYear = null; // set on first renderSummary
 let popupMode = 'stay';
