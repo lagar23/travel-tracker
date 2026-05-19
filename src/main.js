@@ -114,13 +114,19 @@ async function importData(evt) {
       try {
         const d = JSON.parse(e.target.result);
         if (!d.stays || !d.events) { alert('Invalid backup file.'); return; }
-        if (!confirm('This will add all trips from the file to your account. Continue?')) return;
-        await Promise.all([
-          ...d.stays.map(s  => saveTrip({ ...s,  id: undefined })),
-          ...d.events.map(ev => saveEvent({ ...ev, id: undefined })),
-        ]);
+        if (!confirm(`Import ${d.stays.length} trips and ${d.events.length} events? They will be added to your account.`)) return;
+        const errors = [];
+        for (const s of d.stays) {
+          try { await saveTrip({ ...s, id: undefined }); }
+          catch (err) { errors.push(`Trip "${s.label}": ${err.message}`); }
+        }
+        for (const ev of d.events) {
+          try { await saveEvent({ ...ev, id: undefined }); }
+          catch (err) { errors.push(`Event "${ev.label}": ${err.message}`); }
+        }
+        if (errors.length) alert('Some items failed:\n' + errors.join('\n'));
         await loadAndRender();
-      } catch { alert('Could not read file.'); }
+      } catch (err) { alert('Could not read file: ' + err.message); }
     })();
   };
   reader.readAsText(file);
