@@ -6,98 +6,110 @@
 <title>2026 Travel</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #e8e2d8; color: #3d2b1f; min-height: 100vh; }
+body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-height: 100vh; padding: 0 0 40px; }
 
-/* ── TOP BAR ── */
-.top-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 10px; gap: 12px; flex-wrap: wrap; }
-.top-bar h1 { font-size: 18px; font-weight: 700; }
-.status-line { font-size: 11px; color: #9a8070; margin-top: 2px; }
-.status-line .unbooked { color: #b06040; }
-.top-actions { display: flex; gap: 8px; align-items: center; }
-.btn { background: #3d2b1f; color: #f5efe6; font-size: 11px; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-family: inherit; white-space: nowrap; }
-.btn:hover { background: #5a4030; }
-.btn.secondary { background: #ede8e0; color: #3d2b1f; }
-.btn.secondary:hover { background: #d4cec6; }
-
-/* ── NAV ── */
-.nav-bar { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 4px 20px 12px; flex-wrap: wrap; }
-.nav-arrow { width: 30px; height: 30px; background: #f5efe6; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; color: #3d2b1f; display: flex; align-items: center; justify-content: center; }
-.nav-arrow:hover { background: #ede8e0; }
-.nav-label { font-size: 13px; font-weight: 600; color: #3d2b1f; min-width: 180px; text-align: center; }
-.btn-today { font-size: 10px; padding: 4px 10px; }
-.nav-divider { width: 1px; height: 20px; background: #d4c8bc; }
-.mcbtn { background: #ede8e0; color: #9a8070; font-size: 10px; border: none; border-radius: 5px; padding: 4px 9px; cursor: pointer; font-family: inherit; font-weight: 700; }
-.mcbtn.active { background: #3d2b1f; color: #f5efe6; }
-.mcbtn:hover:not(.active) { background: #d4cec6; }
-
-/* ── YEAR GRID ── */
-.year-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 0 20px 20px; }
-.month-block { background: #f5efe6; border-radius: 10px; padding: 11px; }
-.month-name { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #9a8070; margin-bottom: 5px; }
-.dow-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 2px; }
-.dow { font-size: 7.5px; text-align: center; color: #c0a898; font-weight: 600; }
-.week-wrap { position: relative; display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 2px; }
-.d {
-  border-radius: 3px; min-height: 48px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: flex-start;
-  padding: 3px 1px 18px; position: relative; overflow: hidden;
-  cursor: pointer; transition: filter 0.1s;
+/* ── HEADER ── */
+.header {
+  background: #f0ead8; border-bottom: 1.5px solid #d4c4a8;
+  padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  height: 52px; position: sticky; top: 0; z-index: 10;
 }
+.header-title { font-size: 17px; font-weight: 700; color: #1e1408; white-space: nowrap; }
+.nav-group { display: flex; align-items: center; gap: 7px; flex: 1; justify-content: center; }
+.nav-arrow { width: 28px; height: 28px; background: #e4dcc8; border: none; border-radius: 5px; font-size: 15px; color: #3d2b1f; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.nav-arrow:hover { background: #d4ccb8; }
+.nav-label { font-size: 12px; font-weight: 600; color: #2e2010; min-width: 150px; text-align: center; font-family: -apple-system, sans-serif; }
+.btn-today { font-size: 9px; padding: 3px 9px; background: #e4dcc8; color: #5a4030; border: none; border-radius: 4px; cursor: pointer; font-family: -apple-system, sans-serif; font-weight: 700; }
+.btn-today:hover { background: #d4ccb8; }
+.nav-divider { width: 1px; height: 18px; background: #d4c4a8; }
+.mcbtn { background: #e4dcc8; color: #9a8070; font-size: 9px; border: none; border-radius: 4px; padding: 3px 8px; cursor: pointer; font-family: -apple-system, sans-serif; font-weight: 700; }
+.mcbtn.active { background: #3d2b1f; color: #f5efe6; }
+.mcbtn:hover:not(.active) { background: #d4ccb8; }
+.header-actions { display: flex; gap: 6px; }
+.btn { border: none; border-radius: 6px; padding: 6px 13px; font-size: 11px; cursor: pointer; font-family: -apple-system, sans-serif; font-weight: 600; white-space: nowrap; }
+.btn-edit { background: #e4dcc8; color: #3d2b1f; border: 1px solid #c8b898; }
+.btn-edit:hover { background: #d4ccb8; }
+.btn-add  { background: #2e2010; color: #f5efe6; }
+.btn-add:hover { background: #4a3828; }
+
+/* ── STATUS BAR ── */
+.status-bar {
+  padding: 0 24px; height: 30px;
+  background: #ece4d0; border-bottom: 1px solid #d4c4a8;
+  font-size: 10px; color: #8a7050; font-family: -apple-system, sans-serif;
+  display: flex; align-items: center; gap: 16px;
+}
+.status-bar .unbooked { color: #b06040; font-weight: 600; }
+
+/* ── UNIFIED CALENDAR SURFACE ── */
+.cal-surface { margin: 18px 24px; background: #f5f0e6; border-radius: 12px; border: 1px solid #e0d8c4; padding: 16px; }
+.year-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 16px; row-gap: 0; }
+.month-block { padding-bottom: 12px; }
+.month-name { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #a09070; margin-bottom: 4px; padding-top: 10px; font-family: -apple-system, sans-serif; }
+.month-block:nth-child(-n+3) .month-name { padding-top: 0; }
+.month-block:nth-child(n+4) { border-top: 1px solid #e0d8c4; }
+
+.dow-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 2px; }
+.dow { font-size: 7px; text-align: center; color: #c0a898; font-weight: 700; font-family: -apple-system, sans-serif; }
+.week-wrap { position: relative; display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 1px; }
+
+.d { border-radius: 2px; min-height: 52px; display: flex; flex-direction: column; padding: 3px 2px 3px; position: relative; cursor: pointer; transition: filter 0.1s; }
 .d:hover { filter: brightness(0.93); }
 .d.empty { background: transparent !important; cursor: default; pointer-events: none; }
-.d.past { opacity: 0.55; }
-.d.today { outline: 2px solid #3d2b1f; outline-offset: -2px; }
-.d.notrip { background: #ede8e0; color: #c0a898; }
-.d-num-row { display: flex; align-items: center; justify-content: center; gap: 2px; width: 100%; }
-.d-num { font-size: 8.5px; font-weight: 600; line-height: 1; }
-.d-pin { display: inline-block; width: 6px; height: 6px; background: #d94040; border-radius: 50%; flex-shrink: 0; }
-.d-loc { font-size: 10px; text-align: center; line-height: 1.2; margin-top: 2px; font-weight: 700; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
-.d-note { font-size: 7px; text-align: center; line-height: 1.1; margin-top: 1px; opacity: 0.75; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; padding: 0 2px; }
+.d.past { opacity: 0.48; }
+.d.today { outline: 2px solid #2e2010; outline-offset: -2px; }
+.d.notrip { background: #ede6d4; }
+
+.d-num-row { display: flex; align-items: center; gap: 2px; }
+.d-num { font-size: 8px; font-weight: 700; line-height: 1; font-family: -apple-system, sans-serif; }
+.d-pin { width: 5px; height: 5px; background: #d94040; border-radius: 50%; flex-shrink: 0; }
+.d-loc { font-size: 8.5px; font-weight: 700; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
+.d-note { font-size: 7px; line-height: 1.1; margin-top: 1px; opacity: 0.75; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
 
 /* ── STAY COLOURS ── */
-.c-villa      { background:#b8c9e0; color:#1a2940; }
-.c-gijon      { background:#8aacc8; color:#0d1e30; }
-.c-madrid     { background:#ccd9ed; color:#1a2940; }
-.c-bilbao     { background:#9ab4d0; color:#0d1e30; }
-.c-santander  { background:#a8ccd8; color:#0d2030; }
-.c-aranda     { background:#7898b8; color:#f0f4f8; }
-.c-avila      { background:#c0cfe0; color:#1a2940; }
-.c-ireland    { background:#b8dec0; color:#0d2e14; }
-.c-megans     { background:#9acc9e; color:#082010; }
-.c-thailand   { background:#e8c9a0; color:#3d2000; }
-.c-london     { background:#c9b8e0; color:#200040; }
-.c-italy      { background:#f0c8d8; color:#3d0020; }
-.c-boston     { background:#c8d4b8; color:#0d2000; }
-.c-toronto    { background:#c8c4dc; color:#1a0040; }
-.c-portugal   { background:#e8d8a0; color:#2e2000; }
-.c-kazakhstan { background:#d4b8a0; color:#2e1000; }
+.c-villa      { background: #bccde2; color: #1a2940; }
+.c-gijon      { background: #8aacc8; color: #0d1e30; }
+.c-madrid     { background: #ccdaf0; color: #1a2940; }
+.c-bilbao     { background: #9ab6d4; color: #0d1e30; }
+.c-santander  { background: #a8ccd8; color: #0d2030; }
+.c-aranda     { background: #7a9aba; color: #f0f4f8; }
+.c-avila      { background: #c0cfe0; color: #1a2940; }
+.c-ireland    { background: #b8dfc2; color: #0d2e14; }
+.c-megans     { background: #9acca2; color: #082010; }
+.c-thailand   { background: #e8cda4; color: #3d2000; }
+.c-london     { background: #cbbce2; color: #200040; }
+.c-italy      { background: #f0cadc; color: #3d0020; }
+.c-boston     { background: #cad6ba; color: #0d2000; }
+.c-toronto    { background: #cac6de; color: #1a0040; }
+.c-portugal   { background: #ead8a4; color: #2e2000; }
+.c-kazakhstan { background: #d6bca4; color: #2e1000; }
 
 /* ── EVENT BARS ── */
 .event-bar-abs {
-  position: absolute; bottom: 3px; height: 14px;
-  border-radius: 3px; display: flex; align-items: center; justify-content: center;
-  overflow: hidden; pointer-events: auto; z-index: 2; opacity: 0.78; cursor: pointer;
+  position: absolute; bottom: 2px; height: 13px;
+  border-radius: 2px; display: flex; align-items: center;
+  overflow: hidden; pointer-events: auto; z-index: 2; opacity: 0.9; cursor: pointer;
 }
+.event-bar-abs.row2 { bottom: 17px; }
 .event-bar-abs:hover { opacity: 1; }
 .event-bar-abs span {
-  font-size: 8px; font-weight: 700; color: #fff;
+  font-size: 8.5px; font-weight: 700; color: #fff;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding: 0 4px; min-width: 0;
+  padding: 0 4px; font-family: -apple-system, sans-serif;
 }
 
 /* ── SUMMARY ── */
-.summary { margin: 0 20px 16px; background: #f5efe6; border-radius: 10px; padding: 12px 14px; }
-.summary h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9a8070; margin-bottom: 10px; }
-.country-grid { display: flex; gap: 8px; }
-.country-item { background: #ede8e0; border-radius: 6px; padding: 7px 10px; flex: 1 1 0; min-width: 0; }
-.country-name { font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.country-days { font-size: 18px; font-weight: 700; line-height: 1.2; }
-.country-sub  { font-size: 9px; color: #9a8070; }
-.country-pin  { font-size: 9px; color: #b06040; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+.summary { margin: 0 24px 18px; background: #f5f0e6; border-radius: 10px; padding: 12px 16px; border: 1px solid #e4dcc8; }
+.summary h3 { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #a09070; font-family: -apple-system, sans-serif; }
+.country-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.country-item { background: #ede6d4; border-radius: 7px; padding: 8px 12px; flex: 1 1 0; min-width: 80px; border: 1px solid #e0d4bc; }
+.country-name { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: -apple-system, sans-serif; }
+.country-days { font-size: 22px; font-weight: 700; line-height: 1.2; font-family: -apple-system, sans-serif; }
+.country-sub  { font-size: 9px; color: #9a8070; font-family: -apple-system, sans-serif; }
+.country-pin  { font-size: 9px; color: #b06040; display: flex; align-items: center; gap: 3px; margin-top: 2px; font-family: -apple-system, sans-serif; }
 
 /* ── LEGEND ── */
-.legend { padding: 0 20px 20px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 10px; color: #9a8070; align-items: center; }
+.legend { padding: 0 24px 24px; display: flex; gap: 14px; flex-wrap: wrap; font-size: 10px; color: #9a8070; align-items: center; font-family: -apple-system, sans-serif; }
 .ls { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 3px; }
 
 /* ── POPUP ── */
@@ -105,7 +117,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .popup-overlay.open { display: block; }
 .popup {
   position: fixed; z-index: 51; display: none;
-  background: #f5efe6; border-radius: 10px;
+  background: #f5f0e6; border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   padding: 14px; width: 260px;
 }
@@ -133,7 +145,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; }
 .swatch.picked { border-color: #3d2b1f; }
 .popup-actions { display: flex; gap: 6px; }
-.popup-actions .btn { flex: 1; text-align: center; font-size: 11px; padding: 7px; }
+.popup-actions .btn { flex: 1; text-align: center; font-size: 11px; padding: 7px; background: #2e2010; color: #f5efe6; }
 .btn-delete { background: #f0ddd0; color: #6b2000; }
 .btn-delete:hover { background: #e8c8b8; }
 .event-note-link { margin-bottom: 8px; display: none; }
@@ -167,55 +179,56 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </head>
 <body>
 
-<div class="top-bar">
-  <div>
-    <h1>2026 Travel</h1>
-    <div class="status-line" id="statusLine"></div>
+<div class="header">
+  <span class="header-title">2026 Travel</span>
+  <div class="nav-group">
+    <button class="nav-arrow" onclick="shiftView(-1)">‹</button>
+    <div class="nav-label" id="navLabel"></div>
+    <button class="nav-arrow" onclick="shiftView(1)">›</button>
+    <button class="btn-today" onclick="snapToToday()">Today</button>
+    <div class="nav-divider"></div>
+    <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
+    <button class="mcbtn" data-n="6" onclick="setViewMonths(6)">6</button>
+    <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
+    <button class="mcbtn active" data-n="12" onclick="setViewMonths(12)">12</button>
+
   </div>
-  <div class="top-actions">
-    <button class="btn secondary" onclick="exportData()">⬇ Export</button>
-    <button class="btn secondary" onclick="document.getElementById('importFile').click()">⬆ Import</button>
+  <div class="header-actions">
+    <button class="btn btn-edit" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-edit" onclick="document.getElementById('importFile').click()">⬆ Import</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-    <button class="btn secondary" onclick="openEditDrawer()">✏️ Edit stays & events</button>
-    <button class="btn" onclick="openPopupNew()">＋ Add</button>
+    <button class="btn btn-edit" onclick="openEditDrawer()">✏️ Edit</button>
+    <button class="btn btn-add" onclick="openPopupNew()">＋ Add</button>
   </div>
 </div>
 
-<div class="nav-bar">
-  <button class="nav-arrow" onclick="shiftView(-1)">‹</button>
-  <div class="nav-label" id="navLabel"></div>
-  <button class="nav-arrow" onclick="shiftView(1)">›</button>
-  <button class="btn secondary btn-today" onclick="snapToToday()">Today</button>
-  <div class="nav-divider"></div>
-  <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
-  <button class="mcbtn active" data-n="6" onclick="setViewMonths(6)">6</button>
-  <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
-  <button class="mcbtn" data-n="12" onclick="setViewMonths(12)">12</button>
-</div>
+<div class="status-bar" id="statusLine"></div>
 
-<div class="year-grid" id="yearGrid"></div>
+<div class="cal-surface">
+  <div class="year-grid" id="yearGrid"></div>
+</div>
 
 <div class="summary">
   <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
     <h3 style="margin-bottom:0;">Days per country —</h3>
     <button onclick="shiftSummaryYear(-1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9a8070;padding:0 2px;line-height:1;">‹</button>
-    <span id="summaryYearLabel" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9a8070;"></span>
+    <span id="summaryYearLabel" style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#a09070;font-family:-apple-system,sans-serif;"></span>
     <button onclick="shiftSummaryYear(1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9a8070;padding:0 2px;line-height:1;">›</button>
   </div>
   <div class="country-grid" id="countryGrid"></div>
 </div>
 
 <div class="legend">
-  <span><span class="ls" style="background:#b8c9e0;"></span>Spain (blues)</span>
-  <span><span class="ls" style="background:#b8dec0;"></span>Ireland (greens)</span>
-  <span><span class="ls" style="background:#e8c9a0;"></span>Thailand</span>
-  <span><span class="ls" style="background:#c8c4dc;"></span>Toronto</span>
-  <span><span class="ls" style="background:#e8d8a0;"></span>Portugal</span>
-  <span><span class="ls" style="background:#d4b8a0;"></span>Kazakhstan</span>
-  <span><span class="ls" style="background:#f0c8d8;"></span>Italy</span>
-  <span style="opacity:0.55;display:inline-flex;align-items:center;"><span class="ls" style="background:#b8c9e0;"></span>past</span>
-  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:6px;height:6px;background:#d94040;border-radius:50%;"></span>unbooked</span>
-  <span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:24px;height:10px;background:#9b6b8a;border-radius:3px;opacity:0.78;"></span>event</span>
+  <span><span class="ls" style="background:#bccde2;"></span>Spain (blues)</span>
+  <span><span class="ls" style="background:#b8dfc2;"></span>Ireland (greens)</span>
+  <span><span class="ls" style="background:#e8cda4;"></span>Thailand</span>
+  <span><span class="ls" style="background:#cac6de;"></span>Canada</span>
+  <span><span class="ls" style="background:#ead8a4;"></span>Portugal</span>
+  <span><span class="ls" style="background:#d6bca4;"></span>Kazakhstan</span>
+  <span><span class="ls" style="background:#f0cadc;"></span>Italy</span>
+  <span style="opacity:0.5;display:inline-flex;align-items:center;"><span class="ls" style="background:#b8dfc2;"></span>past</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:5px;height:5px;background:#d94040;border-radius:50%;"></span>unbooked</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:24px;height:10px;background:#9b6b8a;border-radius:2px;opacity:0.9;"></span>event</span>
 </div>
 
 <!-- POPUP -->
@@ -476,8 +489,8 @@ function saveData() { localStorage.setItem('travel-2026', JSON.stringify(DATA));
 let DATA = loadData();
 // view state: year + month (0-indexed) of top-left
 let viewYear = TODAY.getFullYear();
-let viewMonth = TODAY.getMonth();
-let viewMonths = 6;
+let viewMonth = 0; // start at January for full-year view
+let viewMonths = 12;
 let summaryYear = null; // set on first renderSummary
 let popupMode = 'stay';
 let popupEditStayId = null;
@@ -504,7 +517,8 @@ function buildDayMap() {
     let isFirst = true;
     while (d <= e) {
       const key = dateToYMD(d);
-      if (!eventMap[key]) eventMap[key] = { ...ev, isFirst };
+      if (!eventMap[key]) eventMap[key] = [];
+      eventMap[key].push({ ...ev, isFirst });
       isFirst = false;
       d.setDate(d.getDate()+1);
     }
@@ -533,8 +547,13 @@ function renderCalendar() {
   const { dayMap, eventMap } = buildDayMap();
   const grid = document.getElementById('yearGrid');
   grid.innerHTML = '';
-  const cols = viewMonths === 12 ? 4 : 3;
+  const cols = viewMonths === 12 ? 4 : viewMonths <= 3 ? 3 : 3;
   grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  // update nth-child border rule to match column count
+  const styleId = 'dynamic-cal-style';
+  let dynStyle = document.getElementById(styleId);
+  if (!dynStyle) { dynStyle = document.createElement('style'); dynStyle.id = styleId; document.head.appendChild(dynStyle); }
+  dynStyle.textContent = `.month-block:nth-child(-n+${cols}) .month-name { padding-top: 0; } .month-block:nth-child(n+${cols+1}) { border-top: 1px solid #e0d8c4; }`;
 
   // pre-pass flag suppression across all data (year-aware)
   let prevCountry = null;
@@ -569,22 +588,42 @@ function renderCalendar() {
     <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>`;
 
     weeks.forEach(week => {
-      const weekEvents = [];
-      const seen = new Set();
+      // collect all events visible in this week, grouped by event id, per row slot
+      const seenByRow = [new Set(), new Set()]; // row0, row1
+      const weekEvents = []; // { startCol, span, row, ...ev }
+
       week.forEach((day, col) => {
         if (!day) return;
         const key = calKey(year, month, day);
-        const ev = eventMap[key];
-        if (!ev || seen.has(ev.id)) return;
-        let span = 0;
-        for (let c=col; c<7; c++) {
-          const d2 = week[c]; if (!d2) break;
-          const k2 = calKey(year, month, d2);
-          if (eventMap[k2] && eventMap[k2].id === ev.id) span++;
-          else break;
-        }
-        weekEvents.push({ startCol: col, span, label: ev.label, color: ev.color, id: ev.id, startKey: key });
-        seen.add(ev.id);
+        const evList = eventMap[key] || [];
+        evList.forEach(ev => {
+          // find which row this event already occupies (or assign next available)
+          let row = -1;
+          for (let r = 0; r < seenByRow.length; r++) {
+            if (seenByRow[r].has(ev.id)) { row = r; break; }
+          }
+          if (row === -1) {
+            // new event this week — assign to first available row
+            for (let r = 0; r < seenByRow.length; r++) {
+              if (!seenByRow[r].has(ev.id)) {
+                // check no other event already claimed this row starting this col
+                row = r; break;
+              }
+            }
+            if (row === -1) return; // more than 2 events, skip overflow
+            // compute span
+            let span = 0;
+            for (let c = col; c < 7; c++) {
+              const d2 = week[c]; if (!d2) break;
+              const k2 = calKey(year, month, d2);
+              const evs2 = eventMap[k2] || [];
+              if (evs2.some(e2 => e2.id === ev.id)) span++;
+              else break;
+            }
+            weekEvents.push({ startCol: col, span, row, label: ev.label, color: ev.color, id: ev.id, startKey: key });
+            seenByRow[row].add(ev.id);
+          }
+        });
       });
 
       html += `<div class="week-wrap">`;
@@ -615,7 +654,8 @@ function renderCalendar() {
       weekEvents.forEach(ev => {
         const leftPct = (ev.startCol/7*100).toFixed(2);
         const widthPct = (ev.span/7*100).toFixed(2);
-        html += `<div class="event-bar-abs" style="left:calc(${leftPct}% + 2px);width:calc(${widthPct}% - 4px);background:${ev.color};" onclick="event.stopPropagation();handleEventBarClick(event,'${ev.id}','${ev.startKey}')"><span>${ev.label}</span></div>`;
+        const rowCls = ev.row === 1 ? ' row2' : '';
+        html += `<div class="event-bar-abs${rowCls}" style="left:calc(${leftPct}% + 1px);width:calc(${widthPct}% - 2px);background:${ev.color};" onclick="event.stopPropagation();handleEventBarClick(event,'${ev.id}','${ev.startKey}')"><span>${ev.label}</span></div>`;
       });
 
       html += `</div>`;
@@ -683,8 +723,9 @@ function renderStatus() {
   const nextUnbooked = DATA.stays.find(s=>!s.booked && ymdToDate(s.start)>=TODAY);
   const todayStr = t ? `${t.flag} ${t.label}` : 'no trip';
   document.getElementById('statusLine').innerHTML =
-    `Today: ${todayStr} &nbsp;·&nbsp; <span class="unbooked">${unbooked} still to book</span>` +
-    (nextUnbooked ? ` &nbsp;·&nbsp; Next: ${nextUnbooked.flag} ${nextUnbooked.label} (${fmtYMD(nextUnbooked.start)})` : '');
+    `<span>Today: ${todayStr}</span>` +
+    `<span class="unbooked">● ${unbooked} still to book</span>` +
+    (nextUnbooked ? `<span>Next unbooked: ${nextUnbooked.flag} ${nextUnbooked.label} (${fmtYMD(nextUnbooked.start)})</span>` : '');
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
@@ -708,8 +749,9 @@ function setViewMonths(n) {
 // ─── POPUP ────────────────────────────────────────────────────────────────────
 function handleDayClick(evt, key) {
   const { dayMap, eventMap } = buildDayMap();
-  const stay = dayMap[key];
-  const ev   = eventMap[key];
+  const stay   = dayMap[key];
+  const evList = eventMap[key] || [];
+  const ev     = evList[0] || null;
   popupEditStayId  = stay ? stay.id : null;
   popupEditEventId = ev   ? ev.id   : null;
   if (stay)      openPopupEditStay(evt, stay.id, key);
