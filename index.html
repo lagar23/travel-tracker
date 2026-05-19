@@ -86,13 +86,14 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 
 /* ── EVENT BARS ── */
 .event-bar-abs {
-  position: absolute; bottom: 2px; height: 13px;
+  position: absolute; bottom: 2px;
   border-radius: 10px; display: flex; align-items: center;
-  overflow: hidden; pointer-events: auto; z-index: 2; cursor: pointer;
+  pointer-events: auto; z-index: 2; cursor: pointer;
   background: rgba(255,255,255,0.45);
   border: 1.5px solid currentColor;
+  padding: 2px 0;
 }
-.event-bar-abs.row2 { bottom: 17px; }
+.event-bar-abs.row2 { bottom: 18px; }
 .event-bar-abs:hover { background: rgba(255,255,255,0.7); }
 .event-bar-abs span {
   font-size: 7.5px; font-weight: 600; line-height: 1;
