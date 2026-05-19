@@ -416,8 +416,48 @@ const COUNTRY_FLAGS = {
 };
 
 // ─── DEFAULT DATA  (dates: YYYYMMDD) ─────────────────────────────────────────
-const DEFAULT_STAYS = [];
-const DEFAULT_EVENTS = [];
+const DEFAULT_STAYS = [
+  {id:"s1",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260101",end:"20260119",booked:true,  note:""},
+  {id:"s2",  type:"stay", country:"Thailand",   flag:"🇹🇭", label:"Thailand",  cssClass:"c-thailand",  start:"20260119",end:"20260212",booked:true,  note:""},
+  {id:"s3",  type:"stay", country:"UK",         flag:"🇬🇧", label:"London",    cssClass:"c-london",    start:"20260212",end:"20260213",booked:true,  note:""},
+  {id:"s4",  type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260213",end:"20260217",booked:true,  note:""},
+  {id:"s5",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Madrid",    cssClass:"c-madrid",    start:"20260217",end:"20260220",booked:true,  note:""},
+  {id:"s6",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260220",end:"20260303",booked:true,  note:""},
+  {id:"s7",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Gijón",     cssClass:"c-gijon",     start:"20260303",end:"20260307",booked:true,  note:""},
+  {id:"s8",  type:"stay", country:"Italy",      flag:"🇮🇹", label:"Italy",     cssClass:"c-italy",     start:"20260307",end:"20260313",booked:true,  note:""},
+  {id:"s9",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Gijón",     cssClass:"c-gijon",     start:"20260313",end:"20260320",booked:true,  note:""},
+  {id:"s10", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260320",end:"20260322",booked:true,  note:""},
+  {id:"s11", type:"stay", country:"USA",        flag:"🇺🇸", label:"Boston",    cssClass:"c-boston",    start:"20260322",end:"20260329",booked:true,  note:""},
+  {id:"s12", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260329",end:"20260405",booked:true,  note:""},
+  {id:"s13", type:"stay", country:"Canada",     flag:"🇨🇦", label:"Toronto",   cssClass:"c-toronto",   start:"20260405",end:"20260419",booked:true,  note:""},
+  {id:"s14", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260419",end:"20260502",booked:true,  note:""},
+  {id:"s15", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260502",end:"20260529",booked:true,  note:""},
+  {id:"s16", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Bilbao",    cssClass:"c-bilbao",    start:"20260529",end:"20260531",booked:true,  note:""},
+  {id:"s17", type:"stay", country:"Portugal",   flag:"🇵🇹", label:"Portugal",  cssClass:"c-portugal",  start:"20260531",end:"20260607",booked:false, note:""},
+  {id:"s18", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260607",end:"20260611",booked:false, note:""},
+  {id:"s19", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Megan's",   cssClass:"c-megans",    start:"20260611",end:"20260717",booked:true,  note:""},
+  {id:"s20", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Santander", cssClass:"c-santander", start:"20260717",end:"20260719",booked:true,  note:""},
+  {id:"s21", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260719",end:"20260805",booked:true,  note:""},
+  {id:"s22", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Aranda",    cssClass:"c-aranda",    start:"20260805",end:"20260809",booked:true,  note:""},
+  {id:"s23", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260809",end:"20260811",booked:true,  note:""},
+  {id:"s24", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260811",end:"20260905",booked:false, note:""},
+  {id:"s25", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260905",end:"20260918",booked:true,  note:""},
+  {id:"s26", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Ávila",     cssClass:"c-avila",     start:"20260918",end:"20260920",booked:false, note:""},
+  {id:"s27", type:"stay", country:"Kazakhstan", flag:"🇰🇿", label:"Almaty",    cssClass:"c-kazakhstan",start:"20260920",end:"20260928",booked:false, note:""},
+  {id:"s28", type:"stay", country:"Kazakhstan", flag:"🇰🇿", label:"Kazakhstan",cssClass:"c-kazakhstan",start:"20260928",end:"20261004",booked:false, note:""},
+  {id:"s29", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20261004",end:"20261201",booked:false, note:""},
+  {id:"s30", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Spain",     cssClass:"c-villa",     start:"20261201",end:"20261231",booked:false, note:""},
+];
+const DEFAULT_EVENTS = [
+  {id:"e1", type:"event", label:"💍 John",       start:"20260530",end:"20260530",color:"#9b6b8a",note:""},
+  {id:"e2", type:"event", label:"Planeta Sound", start:"20260710",end:"20260712",color:"#c2785a",note:""},
+  {id:"e3", type:"event", label:"Santiago",      start:"20260725",end:"20260725",color:"#7a9e6e",note:""},
+  {id:"e4", type:"event", label:"💍 Efrén",       start:"20260919",end:"20260919",color:"#9b6b8a",note:""},
+  {id:"e5", type:"event", label:"💍 Reception",   start:"20260924",end:"20260924",color:"#9b6b8a",note:""},
+  {id:"e6", type:"event", label:"💍 Dameli",       start:"20260927",end:"20260927",color:"#9b6b8a",note:""},
+  {id:"e7", type:"event", label:"🎵 Sonorica",    start:"20260717",end:"20260718",color:"#6a8fc0",note:""},
+  {id:"e8", type:"event", label:"🎵 Sonorama",    start:"20260805",end:"20260808",color:"#c0a030",note:""},
+];
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function uid() { return Math.random().toString(36).slice(2,10); }
