@@ -91,14 +91,14 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
   pointer-events: auto; z-index: 2; cursor: pointer;
   background: rgba(255,255,255,0.75);
   border: 1.5px solid currentColor;
-  padding: 2px 2px;
+  padding: 2px 6px;
 }
 .event-bar-abs.row2 { bottom: 18px; }
-.event-bar-abs:hover { background: rgba(255,255,255,0.7); }
+.event-bar-abs:hover { background: rgba(255,255,255,0.9); }
 .event-bar-abs span {
   font-size: 7.5px; font-weight: 600; line-height: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding: 0 4px; font-family: -apple-system, sans-serif; min-width: 0;
+  font-family: -apple-system, sans-serif; min-width: 0;
 }
 
 /* ── SUMMARY ── */
@@ -191,9 +191,9 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
     <button class="btn-today" onclick="snapToToday()">Today</button>
     <div class="nav-divider"></div>
     <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
-    <button class="mcbtn" data-n="6" onclick="setViewMonths(6)">6</button>
+    <button class="mcbtn active" data-n="6" onclick="setViewMonths(6)">6</button>
     <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
-    <button class="mcbtn active" data-n="12" onclick="setViewMonths(12)">Year</button>
+    <button class="mcbtn" data-n="12" onclick="setViewMonths(12)">Year</button>
   </div>
   <div class="header-actions">
     <button class="btn btn-edit" onclick="exportData()">⬇ Export</button>
@@ -532,7 +532,7 @@ let DATA = loadData();
 // view state: year + month (0-indexed) of top-left
 let viewYear = TODAY.getFullYear();
 let viewMonth = 0; // start at January for full-year view
-let viewMonths = 12;
+let viewMonths = 6;
 let summaryYear = null; // set on first renderSummary
 let popupMode = 'stay';
 let popupEditStayId = null;
