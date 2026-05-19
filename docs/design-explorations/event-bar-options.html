@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Event bar options</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, sans-serif; background: #e8e0cc; color: #2e2010; padding: 20px; min-width: 700px; }
+h2 { font-family: Georgia, serif; font-size: 16px; font-weight: 700; color: #1e1408; margin-bottom: 4px; }
+.subtitle { font-size: 11px; color: #9a8070; margin-bottom: 18px; line-height: 1.5; }
+
+.opt-block { border-radius: 12px; padding: 14px; margin-bottom: 12px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; background: #ede8e0; }
+.opt-block:hover { border-color: #b8a898; }
+.opt-block.selected { border-color: #3d2b1f; }
+.opt-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.opt-letter { width: 22px; height: 22px; border-radius: 50%; background: #3d2b1f; color: #f5efe6; font-size: 11px; font-weight: 700; text-align: center; line-height: 22px; flex-shrink: 0; }
+.opt-title { font-size: 12px; font-weight: 700; color: #3d2b1f; }
+.opt-note { font-size: 10px; color: #9a8070; line-height: 1.5; margin-bottom: 10px; }
+
+.cal { background: #f5f0e6; border-radius: 8px; padding: 8px; }
+.dow-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 2px; }
+.dow { font-size: 7px; text-align: center; color: #c0a898; font-weight: 700; }
+.week { position: relative; display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; overflow: visible; }
+.d { min-height: 58px; min-width: 0; overflow: hidden; border-radius: 2px; padding: 3px; position: relative; }
+.d-top { display: flex; align-items: baseline; gap: 3px; overflow: hidden; white-space: nowrap; }
+.d-num { font-size: 8px; font-weight: 700; font-family: -apple-system, sans-serif; flex-shrink: 0; }
+.d-loc { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; font-family: -apple-system, sans-serif; }
+
+.c-megans    { background: #9acca2; color: #082010; }
+.c-santander { background: #a8ccd8; color: #0d2030; }
+.c-villa     { background: #bccde2; color: #1a2940; }
+.c-ireland   { background: #b8dfc2; color: #0d2e14; }
+
+/* all bars absolutely positioned in .week */
+.bar { position: absolute; display: flex; align-items: center; overflow: hidden; cursor: pointer; z-index: 10; }
+/* row 1 = bottom, row 2 = above it */
+.r1 { bottom: 2px; }
+.r2 { bottom: 18px; }
+
+/* ── F: white + coloured left stripe ── */
+.bar-f { height: 13px; border-radius: 2px; background: #f5f0e6; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.bar-f span { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px 0 7px; font-family: -apple-system, sans-serif; color: #2e2010; }
+.f-terra  { border-left: 3px solid #c2785a; }
+.f-purple { border-left: 3px solid #9b6b8a; }
+
+/* ── G: ghost outline pill ── */
+.bar-g { height: 13px; border-radius: 10px; }
+.bar-g span { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 6px; font-family: -apple-system, sans-serif; }
+.g-terra  { border: 1.5px solid rgba(194,120,90,0.7); color: #8a4020; background: rgba(255,255,255,0.4); }
+.g-purple { border: 1.5px solid rgba(155,107,138,0.7); color: #5a2048; background: rgba(255,255,255,0.4); }
+
+/* ── H: muted tint + italic Georgia ── */
+.bar-h { height: 14px; border-radius: 3px; }
+.bar-h span { font-size: 8px; font-style: italic; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; font-family: Georgia, serif; }
+.h-terra  { background: rgba(194,120,90,0.2); color: #6a2800; }
+.h-purple { background: rgba(155,107,138,0.2); color: #4a1838; }
+
+/* ── I: dark stamp ── */
+.bar-i { height: 12px; border-radius: 2px; opacity: 0.78; }
+.bar-i span { font-size: 7px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; font-family: -apple-system, sans-serif; color: #fff; letter-spacing: 0.3px; }
+.i-terra  { background: #a05030; }
+.i-purple { background: #6a3858; }
+
+/* ── J: watercolour wash + bottom line ── */
+.bar-j { height: 14px; border-radius: 4px; }
+.bar-j span { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; font-family: Georgia, serif; font-style: italic; }
+.j-terra  { background: rgba(194,120,90,0.28); color: #5a2000; border-bottom: 1px solid rgba(194,120,90,0.5); }
+.j-purple { background: rgba(155,107,138,0.28); color: #3a0828; border-bottom: 1px solid rgba(155,107,138,0.5); }
+
+/* scenario note */
+.scenario { font-size: 9px; color: #9a8070; margin-bottom: 6px; font-family: -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+
+<h2>Event bar styles — multi-day span</h2>
+<p class="subtitle">🎵 Sonorama: Mon → Thu (4 days, cols 0–3). 💍 Reception: Sat (1 day, col 5). Flags shown on first day of each stay.</p>
+
+<!-- shared week macro -->
+
+<!-- F -->
+<div class="opt-block" onclick="sel(this)">
+  <div class="opt-header"><span class="opt-letter">F</span><span class="opt-title">White bar + coloured left stripe</span></div>
+  <p class="opt-note">Clean white background, coloured left stripe. Dark label — calm and readable, like a planner entry.</p>
+  <div class="cal">
+    <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>
+    <div class="week" style="min-height:58px;">
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">6</span><span class="d-loc">🇮🇪 Ireland</span></div></div>
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">7</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">8</span><span class="d-loc">Megan's</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">9</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">10</span><span class="d-loc">🇪🇸 Santander</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">11</span></div></div>
+      <div class="d c-villa"   style="z-index:1;"><div class="d-top"><span class="d-num">12</span><span class="d-loc">🇪🇸 Villa</span></div></div>
+      <div class="bar bar-f f-terra r2" style="left:calc(0/7*100% + 1px);width:calc(4/7*100% - 2px);"><span>🎵 Sonorama</span></div>
+      <div class="bar bar-f f-purple r1" style="left:calc(5/7*100% + 1px);width:calc(1/7*100% - 2px);"><span>💍 Reception</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- G -->
+<div class="opt-block" onclick="sel(this)">
+  <div class="opt-header"><span class="opt-letter">G</span><span class="opt-title">Ghost outline pill</span></div>
+  <p class="opt-note">Thin border, semi-transparent fill. Like a pencilled annotation — very delicate.</p>
+  <div class="cal">
+    <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>
+    <div class="week" style="min-height:58px;">
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">6</span><span class="d-loc">🇮🇪 Ireland</span></div></div>
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">7</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">8</span><span class="d-loc">Megan's</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">9</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">10</span><span class="d-loc">🇪🇸 Santander</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">11</span></div></div>
+      <div class="d c-villa"   style="z-index:1;"><div class="d-top"><span class="d-num">12</span><span class="d-loc">🇪🇸 Villa</span></div></div>
+      <div class="bar bar-g g-terra r2" style="left:calc(0/7*100% + 1px);width:calc(4/7*100% - 2px);"><span>🎵 Sonorama</span></div>
+      <div class="bar bar-g g-purple r1" style="left:calc(5/7*100% + 1px);width:calc(1/7*100% - 2px);"><span>💍 Reception</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- H -->
+<div class="opt-block" onclick="sel(this)">
+  <div class="opt-header"><span class="opt-letter">H</span><span class="opt-title">Muted tint + italic Georgia</span></div>
+  <p class="opt-note">Very soft tinted wash, italic serif. Like handwriting on a diary page.</p>
+  <div class="cal">
+    <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>
+    <div class="week" style="min-height:58px;">
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">6</span><span class="d-loc">🇮🇪 Ireland</span></div></div>
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">7</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">8</span><span class="d-loc">Megan's</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">9</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">10</span><span class="d-loc">🇪🇸 Santander</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">11</span></div></div>
+      <div class="d c-villa"   style="z-index:1;"><div class="d-top"><span class="d-num">12</span><span class="d-loc">🇪🇸 Villa</span></div></div>
+      <div class="bar bar-h h-terra r2" style="left:calc(0/7*100% + 1px);width:calc(4/7*100% - 2px);"><span>🎵 Sonorama</span></div>
+      <div class="bar bar-h h-purple r1" style="left:calc(5/7*100% + 1px);width:calc(1/7*100% - 2px);"><span>💍 Reception</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- I -->
+<div class="opt-block" onclick="sel(this)">
+  <div class="opt-header"><span class="opt-letter">I</span><span class="opt-title">Dark stamp — muted solid, white label</span></div>
+  <p class="opt-note">Deep dark fill, white text, semi-opaque. Bold at a glance, muted enough to not overwhelm.</p>
+  <div class="cal">
+    <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>
+    <div class="week" style="min-height:58px;">
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">6</span><span class="d-loc">🇮🇪 Ireland</span></div></div>
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">7</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">8</span><span class="d-loc">Megan's</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">9</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">10</span><span class="d-loc">🇪🇸 Santander</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">11</span></div></div>
+      <div class="d c-villa"   style="z-index:1;"><div class="d-top"><span class="d-num">12</span><span class="d-loc">🇪🇸 Villa</span></div></div>
+      <div class="bar bar-i i-terra r2" style="left:calc(0/7*100% + 1px);width:calc(4/7*100% - 2px);"><span>🎵 Sonorama</span></div>
+      <div class="bar bar-i i-purple r1" style="left:calc(5/7*100% + 1px);width:calc(1/7*100% - 2px);"><span>💍 Reception</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- J -->
+<div class="opt-block" onclick="sel(this)">
+  <div class="opt-header"><span class="opt-letter">J</span><span class="opt-title">Watercolour wash + bottom line</span></div>
+  <p class="opt-note">Translucent fill, subtle bottom border, italic serif. The warmest, most travel-journal option.</p>
+  <div class="cal">
+    <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>
+    <div class="week" style="min-height:58px;">
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">6</span><span class="d-loc">🇮🇪 Ireland</span></div></div>
+      <div class="d c-ireland" style="z-index:1;"><div class="d-top"><span class="d-num">7</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">8</span><span class="d-loc">Megan's</span></div></div>
+      <div class="d c-megans"  style="z-index:1;"><div class="d-top"><span class="d-num">9</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">10</span><span class="d-loc">🇪🇸 Santander</span></div></div>
+      <div class="d c-santander" style="z-index:1;"><div class="d-top"><span class="d-num">11</span></div></div>
+      <div class="d c-villa"   style="z-index:1;"><div class="d-top"><span class="d-num">12</span><span class="d-loc">🇪🇸 Villa</span></div></div>
+      <div class="bar bar-j j-terra r2" style="left:calc(0/7*100% + 1px);width:calc(4/7*100% - 2px);"><span>🎵 Sonorama</span></div>
+      <div class="bar bar-j j-purple r1" style="left:calc(5/7*100% + 1px);width:calc(1/7*100% - 2px);"><span>💍 Reception</span></div>
+    </div>
+  </div>
+</div>
+
+<p style="font-size:10px;color:#9a8070;margin-top:4px;">Click to select, then reply in the terminal.</p>
+<script>
+function sel(el) {
+  document.querySelectorAll('.opt-block').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>
