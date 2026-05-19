@@ -1,4 +1,4 @@
-import { TODAY, MONTHS, COUNTRY_CSS, fmtYMD, parseYMD, uid } from './utils.js';
+import { TODAY, MONTHS, COUNTRY_CSS, fmtYMD, parseYMD } from './utils.js';
 
 let popupMode = 'stay';
 let popupEditStayId  = null;
@@ -268,8 +268,10 @@ function renderDrawer(stays, events) {
       <td style="white-space:nowrap;">${statusEl}${delBtn}</td></tr>`;
   }).join('');
 
-  document.getElementById('eventBody').innerHTML = events.map(e => {
-    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${e.color};margin-right:5px;flex-shrink:0;"></span>`;
+  const eventBody = document.getElementById('eventBody');
+  eventBody.innerHTML = events.map(e => {
+    const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(e.color) ? e.color : '#cccccc';
+    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${safeColor};margin-right:5px;flex-shrink:0;"></span>`;
     const noteVal  = (e.note||'').replace(/"/g,'&quot;');
     const labelVal = e.label.replace(/"/g,'&quot;');
     return `<tr data-eid="${e.id}">
@@ -281,13 +283,14 @@ function renderDrawer(stays, events) {
     </tr>`;
   }).join('');
 
-  document.querySelectorAll('[data-toggleid]').forEach(btn => {
+  const tripBody = document.getElementById('tripBody');
+  tripBody.querySelectorAll('[data-toggleid]').forEach(btn => {
     btn.addEventListener('click', () => _onDelete('stay-toggle', btn.dataset.toggleid));
   });
-  document.querySelectorAll('[data-deleteid]').forEach(btn => {
+  tripBody.querySelectorAll('[data-deleteid]').forEach(btn => {
     btn.addEventListener('click', () => _onDelete('stay', btn.dataset.deleteid));
   });
-  document.querySelectorAll('[data-deleteeid]').forEach(btn => {
+  eventBody.querySelectorAll('[data-deleteeid]').forEach(btn => {
     btn.addEventListener('click', () => _onDelete('event', btn.dataset.deleteeid));
   });
 }
