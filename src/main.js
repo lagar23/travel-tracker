@@ -60,7 +60,12 @@ async function onDelete(type, id) {
     await deleteEvent(id);
   } else if (type === 'stay-toggle') {
     const s = stays.find(x => x.id === id);
-    if (s) await saveTrip({ ...s, booked: !s.booked });
+    if (s) {
+      const nowBooked = !s.booked;
+      // Persist via accom.booked override (the schema's manual-override mechanism)
+      const accom = s.accom ? { ...s.accom, booked: nowBooked } : { booked: nowBooked, name: null, address: null, booking_ref: null, source: 'manual' };
+      await saveTrip({ ...s, accom });
+    }
   }
   await loadAndRender();
 }
@@ -104,17 +109,19 @@ function exportData() {
 async function importData(evt) {
   const file = evt.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const d = JSON.parse(e.target.result);
-      if (!d.stays || !d.events) { alert('Invalid backup file.'); return; }
-      if (!confirm('This will add all trips from the file to your account. Continue?')) return;
-      await Promise.all([
-        ...d.stays.map(s  => saveTrip({ ...s,  id: undefined })),
-        ...d.events.map(ev => saveEvent({ ...ev, id: undefined })),
-      ]);
-      await loadAndRender();
-    } catch { alert('Could not read file.'); }
+  reader.onload = e => {
+    (async () => {
+      try {
+        const d = JSON.parse(e.target.result);
+        if (!d.stays || !d.events) { alert('Invalid backup file.'); return; }
+        if (!confirm('This will add all trips from the file to your account. Continue?')) return;
+        await Promise.all([
+          ...d.stays.map(s  => saveTrip({ ...s,  id: undefined })),
+          ...d.events.map(ev => saveEvent({ ...ev, id: undefined })),
+        ]);
+        await loadAndRender();
+      } catch { alert('Could not read file.'); }
+    })();
   };
   reader.readAsText(file);
   evt.target.value = '';
@@ -122,7 +129,7 @@ async function importData(evt) {
 
 // ── auth ──────────────────────────────────────────────────────────────────────
 function showApp()      { document.getElementById('app').style.display = '';     document.getElementById('authGate').style.display = 'none'; }
-function showAuthGate() { document.getElementById('app').style.display = 'none'; document.getElementById('authGate').style.display = '';    }
+function showAuthGate() { document.getElementById('app').style.display = 'none'; document.getElementById('authGate').style.display = 'flex'; }
 
 // ── boot ──────────────────────────────────────────────────────────────────────
 async function boot() {
