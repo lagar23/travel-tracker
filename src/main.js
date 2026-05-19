@@ -143,7 +143,7 @@ async function boot() {
   document.getElementById('btnExport').addEventListener('click', exportData);
   document.getElementById('btnImportTrigger').addEventListener('click', () => document.getElementById('importFile').click());
   document.getElementById('importFile').addEventListener('change', importData);
-  document.getElementById('btnSignOut').addEventListener('click', async () => { await signOut(); showAuthGate(); });
+  document.getElementById('btnSignOut').addEventListener('click', async () => { try { await signOut(); } catch (e) { console.error('Sign out error:', e); } showAuthGate(); });
   document.getElementById('btnEditDrawer').addEventListener('click', () => openEditDrawer(stays, events));
   document.getElementById('btnAdd').addEventListener('click', () => openPopupNew(null, null));
   document.getElementById('btnSummaryPrev').addEventListener('click', () => { shiftSummaryYear(-1, stays); });
