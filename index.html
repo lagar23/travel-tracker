@@ -60,10 +60,10 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 .d.today { outline: 2px solid #2e2010; outline-offset: -2px; }
 .d.notrip { background: #ede6d4; }
 
-.d-num-row { display: flex; align-items: center; gap: 2px; }
-.d-num { font-size: 8px; font-weight: 700; line-height: 1; font-family: -apple-system, sans-serif; }
-.d-pin { width: 5px; height: 5px; background: #d94040; border-radius: 50%; flex-shrink: 0; }
-.d-loc { font-size: 8.5px; font-weight: 700; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
+.d-num-row { display: flex; align-items: baseline; gap: 3px; overflow: hidden; white-space: nowrap; }
+.d-num { font-size: 8px; font-weight: 700; line-height: 1; font-family: -apple-system, sans-serif; flex-shrink: 0; }
+.d-pin { width: 5px; height: 5px; background: #d94040; border-radius: 50%; flex-shrink: 0; margin-bottom: 1px; }
+.d-loc { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
 .d-note { font-size: 7px; line-height: 1.1; margin-top: 1px; opacity: 0.75; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
 
 /* ── STAY COLOURS ── */
@@ -87,15 +87,17 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 /* ── EVENT BARS ── */
 .event-bar-abs {
   position: absolute; bottom: 2px; height: 13px;
-  border-radius: 2px; display: flex; align-items: center;
-  overflow: hidden; pointer-events: auto; z-index: 2; opacity: 0.9; cursor: pointer;
+  border-radius: 10px; display: flex; align-items: center;
+  overflow: hidden; pointer-events: auto; z-index: 2; cursor: pointer;
+  background: rgba(255,255,255,0.45);
+  border: 1.5px solid currentColor;
 }
 .event-bar-abs.row2 { bottom: 17px; }
-.event-bar-abs:hover { opacity: 1; }
+.event-bar-abs:hover { background: rgba(255,255,255,0.7); }
 .event-bar-abs span {
-  font-size: 8.5px; font-weight: 700; color: #fff;
+  font-size: 7.5px; font-weight: 600;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding: 0 4px; font-family: -apple-system, sans-serif;
+  padding: 0 6px; font-family: -apple-system, sans-serif;
 }
 
 /* ── SUMMARY ── */
@@ -682,15 +684,13 @@ function renderCalendar() {
         let cls = 'd' + (past?' past':'') + (isToday?' today':'') + ' ' + (t ? t.cssClass : 'notrip');
 
         const needsPin = t && t.isFirst && !t.booked;
-        let inner = `<div class="d-num-row">${needsPin?'<span class="d-pin"></span>':''}<span class="d-num">${day}</span></div>`;
+        const flag = (t && t.isFirst && showFlag[key]) ? `${t.flag} ` : '';
+        const locStr = (t && t.isFirst) ? `${flag}${t.label}` : '';
+        let inner = `<div class="d-num-row">${needsPin?'<span class="d-pin"></span>':''}<span class="d-num">${day}</span>${locStr ? `<span class="d-loc">${locStr}</span>` : ''}</div>`;
 
-        if (t && t.isFirst) {
-          const flag = showFlag[key] ? `${t.flag} ` : '';
-          inner += `<span class="d-loc">${flag}${t.label}</span>`;
-          if (t.note) {
-            const isUrl = t.note.startsWith('http://') || t.note.startsWith('https://');
-            inner += `<span class="d-note">${isUrl ? '🔗' : t.note}</span>`;
-          }
+        if (t && t.isFirst && t.note) {
+          const isUrl = t.note.startsWith('http://') || t.note.startsWith('https://');
+          inner += `<span class="d-note">${isUrl ? '🔗' : t.note}</span>`;
         }
 
         html += `<div class="${cls}" data-key="${key}" onclick="handleDayClick(event,'${key}')">${inner}</div>`;
@@ -700,7 +700,7 @@ function renderCalendar() {
         const leftPct = (ev.startCol/7*100).toFixed(2);
         const widthPct = (ev.span/7*100).toFixed(2);
         const rowCls = ev.row === 1 ? ' row2' : '';
-        html += `<div class="event-bar-abs${rowCls}" style="left:calc(${leftPct}% + 1px);width:calc(${widthPct}% - 2px);background:${ev.color};" onclick="event.stopPropagation();handleEventBarClick(event,'${ev.id}','${ev.startKey}')"><span>${ev.label}</span></div>`;
+        html += `<div class="event-bar-abs${rowCls}" style="left:calc(${leftPct}% + 1px);width:calc(${widthPct}% - 2px);color:${ev.color};" onclick="event.stopPropagation();handleEventBarClick(event,'${ev.id}','${ev.startKey}')"><span>${ev.label}</span></div>`;
       });
 
       html += `</div>`;
