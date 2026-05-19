@@ -190,7 +190,7 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
     <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
     <button class="mcbtn" data-n="6" onclick="setViewMonths(6)">6</button>
     <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
-    <button class="mcbtn active" data-n="12" onclick="setViewMonths(12)">12</button>
+    <button class="mcbtn active" data-n="12" onclick="setViewMonths(12)">Year</button>
 
   </div>
   <div class="header-actions">
@@ -535,12 +535,18 @@ function render() {
 }
 
 function renderNav() {
-  const endAbsMonth = viewMonth + viewMonths - 1;
-  const endYear  = viewYear + Math.floor(endAbsMonth / 12);
-  const endMonth = endAbsMonth % 12;
-  const startStr = MONTHS[viewMonth].slice(0,3) + ' ' + viewYear;
-  const endStr   = MONTHS[endMonth].slice(0,3) + ' ' + endYear;
-  document.getElementById('navLabel').textContent = startStr + ' – ' + endStr;
+  let label;
+  if (viewMonths === 12) {
+    label = String(viewYear);
+  } else {
+    const endAbsMonth = viewMonth + viewMonths - 1;
+    const endYear  = viewYear + Math.floor(endAbsMonth / 12);
+    const endMonth = endAbsMonth % 12;
+    const startStr = MONTHS[viewMonth].slice(0,3) + ' ' + viewYear;
+    const endStr   = MONTHS[endMonth].slice(0,3) + ' ' + endYear;
+    label = startStr + ' – ' + endStr;
+  }
+  document.getElementById('navLabel').textContent = label;
 }
 
 function renderCalendar() {
@@ -730,19 +736,35 @@ function renderStatus() {
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 function shiftView(dir) {
-  viewMonth += dir;
-  if (viewMonth < 0) { viewMonth += 12; viewYear--; }
-  else if (viewMonth > 11) { viewMonth -= 12; viewYear++; }
+  if (viewMonths === 12) {
+    viewYear += dir;
+  } else {
+    viewMonth += dir * viewMonths;
+    while (viewMonth < 0)  { viewMonth += 12; viewYear--; }
+    while (viewMonth > 11) { viewMonth -= 12; viewYear++; }
+  }
   render();
 }
 function snapToToday() {
-  viewYear  = TODAY.getFullYear();
-  viewMonth = TODAY.getMonth();
+  if (viewMonths === 12) {
+    viewYear  = TODAY.getFullYear();
+    viewMonth = 0;
+  } else {
+    viewYear  = TODAY.getFullYear();
+    viewMonth = TODAY.getMonth();
+  }
   render();
 }
 function setViewMonths(n) {
   viewMonths = n;
   document.querySelectorAll('.mcbtn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.n)===n));
+  if (n === 12) {
+    viewYear  = TODAY.getFullYear();
+    viewMonth = 0;
+  } else {
+    viewYear  = TODAY.getFullYear();
+    viewMonth = TODAY.getMonth();
+  }
   render();
 }
 
