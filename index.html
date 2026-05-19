@@ -53,7 +53,7 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 .dow { font-size: 7px; text-align: center; color: #c0a898; font-weight: 700; font-family: -apple-system, sans-serif; }
 .week-wrap { position: relative; display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 1px; overflow: hidden; }
 
-.d { border-radius: 2px; min-height: 52px; display: flex; flex-direction: column; padding: 3px 2px 3px; position: relative; cursor: pointer; transition: filter 0.1s; }
+.d { border-radius: 2px; min-height: 52px; min-width: 0; display: flex; flex-direction: column; padding: 3px 2px 3px; position: relative; cursor: pointer; transition: filter 0.1s; overflow: hidden; }
 .d:hover { filter: brightness(0.93); }
 .d.empty { background: transparent !important; cursor: default; pointer-events: none; }
 .d.past { opacity: 0.48; }
