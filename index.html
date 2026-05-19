@@ -4,1153 +4,185 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>2026 Travel</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-height: 100vh; padding: 0 0 40px; }
-
-/* ── HEADER ── */
-.header {
-  background: #f0ead8; border-bottom: 1.5px solid #d4c4a8;
-  padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 48px; position: sticky; top: 0; z-index: 10;
-}
-.header-title { font-size: 17px; font-weight: 700; color: #1e1408; white-space: nowrap; }
-.nav-group { display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
-.nav-arrow { width: 28px; height: 28px; background: #e4dcc8; border: none; border-radius: 5px; font-size: 15px; color: #3d2b1f; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.nav-arrow:hover { background: #d4ccb8; }
-.nav-label { font-size: 12px; font-weight: 600; color: #2e2010; min-width: 80px; text-align: center; font-family: -apple-system, sans-serif; }
-.btn-today { font-size: 9px; padding: 3px 9px; background: #e4dcc8; color: #5a4030; border: none; border-radius: 4px; cursor: pointer; font-family: -apple-system, sans-serif; font-weight: 700; }
-.btn-today:hover { background: #d4ccb8; }
-.nav-divider { width: 1px; height: 18px; background: #d4c4a8; }
-.mcbtn { background: #e4dcc8; color: #9a8070; font-size: 9px; border: none; border-radius: 4px; padding: 3px 8px; cursor: pointer; font-family: -apple-system, sans-serif; font-weight: 700; }
-.mcbtn.active { background: #3d2b1f; color: #f5efe6; }
-.mcbtn:hover:not(.active) { background: #d4ccb8; }
-.header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.btn { border: none; border-radius: 6px; padding: 6px 13px; font-size: 11px; cursor: pointer; font-family: -apple-system, sans-serif; font-weight: 600; white-space: nowrap; }
-.btn-edit { background: #e4dcc8; color: #3d2b1f; border: 1px solid #c8b898; }
-.btn-edit:hover { background: #d4ccb8; }
-.btn-add  { background: #2e2010; color: #f5efe6; }
-.btn-add:hover { background: #4a3828; }
-
-/* ── STATUS BAR ── */
-.status-bar {
-  padding: 0 24px; height: 30px;
-  background: #ece4d0; border-bottom: 1px solid #d4c4a8;
-  font-size: 10px; color: #8a7050; font-family: -apple-system, sans-serif;
-  display: flex; align-items: center; gap: 16px;
-}
-.status-bar .unbooked { color: #b06040; font-weight: 600; }
-
-/* ── UNIFIED CALENDAR SURFACE ── */
-.cal-surface { margin: 18px 24px; background: #f5f0e6; border-radius: 12px; border: 1px solid #e0d8c4; padding: 16px; }
-.year-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 16px; row-gap: 0; }
-.month-block { padding-bottom: 12px; }
-.month-name { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #a09070; margin-bottom: 4px; padding-top: 10px; font-family: -apple-system, sans-serif; }
-.month-block:nth-child(-n+3) .month-name { padding-top: 0; }
-.month-block:nth-child(n+4) { border-top: 1px solid #e0d8c4; }
-
-.dow-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 2px; }
-.dow { font-size: 7px; text-align: center; color: #c0a898; font-weight: 700; font-family: -apple-system, sans-serif; }
-.week-wrap { position: relative; display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; margin-bottom: 1px; overflow: hidden; }
-
-.d { border-radius: 2px; min-height: 52px; min-width: 0; display: flex; flex-direction: column; padding: 3px 2px 3px; position: relative; cursor: pointer; transition: filter 0.1s; overflow: hidden; }
-.d:hover { filter: brightness(0.93); }
-.d.empty { background: transparent !important; cursor: default; pointer-events: none; }
-.d.past { opacity: 0.48; }
-.d.today { outline: 2px solid #2e2010; outline-offset: -2px; }
-.d.notrip { background: #ede6d4; }
-
-.d-num-row { display: flex; align-items: baseline; gap: 3px; overflow: hidden; white-space: nowrap; }
-.d-num { font-size: 8px; font-weight: 700; line-height: 1; font-family: -apple-system, sans-serif; flex-shrink: 0; }
-.d-pin { width: 5px; height: 5px; background: #d94040; border-radius: 50%; flex-shrink: 0; margin-bottom: 1px; }
-.d-loc { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
-.d-note { font-size: 7px; line-height: 1.1; margin-top: 1px; opacity: 0.75; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
-
-/* ── STAY COLOURS ── */
-.c-villa      { background: #d4e0ee; color: #1a2940; }
-.c-gijon      { background: #b0cce0; color: #0d1e30; }
-.c-madrid     { background: #ddeaf8; color: #1a2940; }
-.c-bilbao     { background: #bed0e6; color: #0d1e30; }
-.c-santander  { background: #c4dde8; color: #0d2030; }
-.c-aranda     { background: #a4bece; color: #0d1e30; }
-.c-avila      { background: #d4dff0; color: #1a2940; }
-.c-ireland    { background: #ccecd4; color: #0d2e14; }
-.c-megans     { background: #b8e0be; color: #082010; }
-.c-thailand   { background: #f0dfc0; color: #3d2000; }
-.c-london     { background: #ddd4f0; color: #200040; }
-.c-italy      { background: #f8dcea; color: #3d0020; }
-.c-boston     { background: #dae8cc; color: #0d2000; }
-.c-toronto    { background: #dcdaf0; color: #1a0040; }
-.c-portugal   { background: #f0e8c0; color: #2e2000; }
-.c-kazakhstan { background: #e4d0ba; color: #2e1000; }
-
-/* ── EVENT BARS ── */
-.event-bar-abs {
-  position: absolute; bottom: 2px;
-  border-radius: 10px; display: flex; align-items: center;
-  pointer-events: auto; z-index: 2; cursor: pointer;
-  background: rgba(255,255,255,0.75);
-  border: 1.5px solid currentColor;
-  padding: 2px 6px;
-}
-.event-bar-abs.row2 { bottom: 18px; }
-.event-bar-abs:hover { background: rgba(255,255,255,0.9); }
-.event-bar-abs span {
-  font-size: 7.5px; font-weight: 600; line-height: 1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-family: -apple-system, sans-serif; min-width: 0;
-}
-
-/* ── SUMMARY ── */
-.summary { margin: 0 24px 18px; background: #f5f0e6; border-radius: 10px; padding: 12px 16px; border: 1px solid #e4dcc8; }
-.summary h3 { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #a09070; font-family: -apple-system, sans-serif; }
-.country-grid { display: flex; gap: 8px; flex-wrap: wrap; }
-.country-item { background: #ede6d4; border-radius: 7px; padding: 8px 12px; flex: 1 1 0; min-width: 80px; border: 1px solid #e0d4bc; }
-.country-name { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: -apple-system, sans-serif; }
-.country-days { font-size: 22px; font-weight: 700; line-height: 1.2; font-family: -apple-system, sans-serif; }
-.country-sub  { font-size: 9px; color: #9a8070; font-family: -apple-system, sans-serif; }
-.country-pin  { font-size: 9px; color: #b06040; display: flex; align-items: center; gap: 3px; margin-top: 2px; font-family: -apple-system, sans-serif; }
-
-/* ── LEGEND ── */
-.legend { padding: 0 24px 24px; display: flex; gap: 14px; flex-wrap: wrap; font-size: 10px; color: #9a8070; align-items: center; font-family: -apple-system, sans-serif; }
-.ls { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 3px; }
-
-/* ── POPUP ── */
-.popup-overlay { display: none; position: fixed; inset: 0; z-index: 50; }
-.popup-overlay.open { display: block; }
-.popup {
-  position: fixed; z-index: 51; display: none;
-  background: #f5f0e6; border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  padding: 14px; width: 260px;
-}
-.inner-tabs { display: flex; gap: 2px; margin-bottom: 10px; }
-.inner-tab { flex: 1; text-align: center; font-size: 9px; font-weight: 700; padding: 4px 4px; border-radius: 4px; cursor: pointer; color: #9a8070; border: none; background: none; font-family: inherit; text-transform: uppercase; letter-spacing: .4px; }
-.inner-tab.active { background: #ede8e0; color: #3d2b1f; }
-.popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.popup-header .date-label { font-size: 11px; font-weight: 700; color: #3d2b1f; }
-.popup-close { background: none; border: none; font-size: 16px; cursor: pointer; color: #9a8070; line-height: 1; padding: 0; }
-.popup-close:hover { color: #3d2b1f; }
-.toggle-tabs { display: flex; gap: 2px; background: #ede8e0; border-radius: 6px; padding: 2px; margin-bottom: 10px; }
-.tab { flex: 1; text-align: center; font-size: 10px; font-weight: 600; padding: 5px 6px; border-radius: 4px; cursor: pointer; color: #9a8070; border: none; background: none; font-family: inherit; }
-.tab.active { background: #f5efe6; color: #3d2b1f; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.field { margin-bottom: 8px; }
-.field label { display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #9a8070; margin-bottom: 3px; }
-.field input, .field select {
-  width: 100%; font-size: 11px; font-family: inherit;
-  border: 1px solid #d4c8bc; border-radius: 5px; padding: 5px 7px;
-  background: #fff; color: #3d2b1f;
-}
-.field input:focus, .field select:focus { outline: 2px solid #8aacc8; border-color: transparent; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-.field-row .field { margin-bottom: 0; }
-.color-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-.swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; }
-.swatch.picked { border-color: #3d2b1f; }
-.popup-actions { display: flex; gap: 6px; }
-.popup-actions .btn { flex: 1; text-align: center; font-size: 11px; padding: 7px; background: #2e2010; color: #f5efe6; }
-.btn-delete { background: #f0ddd0; color: #6b2000; }
-.btn-delete:hover { background: #e8c8b8; }
-.event-note-link { margin-bottom: 8px; display: none; }
-.event-note-link a { font-size: 10px; color: #6a8fc0; text-decoration: none; }
-.event-note-link a:hover { text-decoration: underline; }
-
-/* ── EDIT DRAWER ── */
-.edit-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.28); z-index: 100; }
-.edit-drawer { display: none; position: fixed; right: 0; top: 0; bottom: 0; width: 420px; background: #f5efe6; box-shadow: -4px 0 32px rgba(0,0,0,0.18); padding: 20px; overflow-y: auto; z-index: 101; }
-.drawer-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-.drawer-header h2 { font-size: 15px; font-weight: 700; }
-.drawer-subtitle { font-size: 11px; color: #9a8070; margin-bottom: 14px; }
-.drawer-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9a8070; margin: 18px 0 8px; }
-.trip-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-.trip-table th { text-align: left; color: #9a8070; font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; padding: 0 4px 6px; }
-.trip-table td { padding: 3px 4px; vertical-align: middle; }
-.trip-table tr + tr td { border-top: 1px solid #ede8e0; }
-.trip-table tr.is-past td { color: #b8a898; }
-.color-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
-.trip-label { display: flex; align-items: center; white-space: nowrap; }
-.trip-table input[type=text] { width: 58px; font-size: 10px; font-family: inherit; border: 1px solid #d4c8bc; border-radius: 4px; padding: 3px 5px; background: #fff; color: #3d2b1f; }
-.trip-table input.wide { width: 120px; }
-.readonly { color: #b8a898; font-style: italic; }
-.status-badge { font-size: 9px; padding: 2px 6px; border-radius: 8px; font-weight: 600; white-space: nowrap; cursor: pointer; border: none; font-family: inherit; }
-.status-done   { background: #e0ddd8; color: #7a7068; cursor: default !important; }
-.status-booked { background: #d4e8d0; color: #0d3018; }
-.status-tobook { background: #f0ddd0; color: #6b2000; }
-.save-btn { margin-top: 14px; background: #3d2b1f; color: #f5efe6; font-size: 12px; border: none; border-radius: 6px; padding: 10px 16px; cursor: pointer; font-family: inherit; width: 100%; }
-.save-btn:hover { background: #5a4030; }
-</style>
+<link rel="stylesheet" href="src/style.css">
 </head>
 <body>
 
-<div class="header">
-  <span class="header-title">2026 Travel</span>
-  <div class="nav-group">
-    <button class="nav-arrow" onclick="shiftView(-1)">‹</button>
-    <div class="nav-label" id="navLabel"></div>
-    <button class="nav-arrow" onclick="shiftView(1)">›</button>
-    <button class="btn-today" onclick="snapToToday()">Today</button>
-    <div class="nav-divider"></div>
-    <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
-    <button class="mcbtn active" data-n="6" onclick="setViewMonths(6)">6</button>
-    <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
-    <button class="mcbtn" data-n="12" onclick="setViewMonths(12)">Year</button>
-  </div>
-  <div class="header-actions">
-    <button class="btn btn-edit" onclick="exportData()">⬇ Export</button>
-    <button class="btn btn-edit" onclick="document.getElementById('importFile').click()">⬆ Import</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-    <button class="btn btn-edit" onclick="openEditDrawer()">✏️ Edit</button>
-    <button class="btn btn-add" onclick="openPopupNew()">＋ Add</button>
-  </div>
+<!-- AUTH GATE (shown when logged out) -->
+<div id="authGate" style="display:none; position:fixed; inset:0; background:#e8e0cc;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:200;">
+  <span style="font-family:Georgia,serif; font-size:28px; font-weight:700; color:#1e1408;">2026 Travel</span>
+  <button id="btnSignIn" style="background:#2e2010; color:#f5efe6; font-size:13px; border:none;
+    border-radius:8px; padding:10px 22px; cursor:pointer; font-family:-apple-system,sans-serif; font-weight:600;">
+    Sign in with Google
+  </button>
 </div>
 
-<div class="status-bar" id="statusLine"></div>
-
-<div class="cal-surface">
-  <div class="year-grid" id="yearGrid"></div>
-</div>
-
-<div class="summary">
-  <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-    <h3 style="margin-bottom:0;">Days per country —</h3>
-    <button onclick="shiftSummaryYear(-1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9a8070;padding:0 2px;line-height:1;">‹</button>
-    <span id="summaryYearLabel" style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#a09070;font-family:-apple-system,sans-serif;"></span>
-    <button onclick="shiftSummaryYear(1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9a8070;padding:0 2px;line-height:1;">›</button>
-  </div>
-  <div class="country-grid" id="countryGrid"></div>
-</div>
-
-<div class="legend">
-  <span><span class="ls" style="background:#bccde2;"></span>Spain (blues)</span>
-  <span><span class="ls" style="background:#b8dfc2;"></span>Ireland (greens)</span>
-  <span><span class="ls" style="background:#e8cda4;"></span>Thailand</span>
-  <span><span class="ls" style="background:#cac6de;"></span>Canada</span>
-  <span><span class="ls" style="background:#ead8a4;"></span>Portugal</span>
-  <span><span class="ls" style="background:#d6bca4;"></span>Kazakhstan</span>
-  <span><span class="ls" style="background:#f0cadc;"></span>Italy</span>
-  <span style="opacity:0.5;display:inline-flex;align-items:center;"><span class="ls" style="background:#b8dfc2;"></span>past</span>
-  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:5px;height:5px;background:#d94040;border-radius:50%;"></span>unbooked</span>
-  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:24px;height:10px;background:#9b6b8a;border-radius:2px;opacity:0.9;"></span>event</span>
-</div>
-
-<!-- POPUP -->
-<div class="popup-overlay" id="popupOverlay" onclick="closePopup()"></div>
-<div class="popup" id="popup" onclick="event.stopPropagation()">
-  <div class="popup-header">
-    <span class="date-label" id="popupDateLabel"></span>
-    <button class="popup-close" onclick="closePopup()">✕</button>
-  </div>
-  <div class="toggle-tabs">
-    <button class="tab active" id="tabStay" onclick="switchPopupTab('stay')">🏠 Stay</button>
-    <button class="tab" id="tabEvent" onclick="switchPopupTab('event')">📅 Event</button>
-  </div>
-
-  <!-- STAY FIELDS -->
-  <div id="stayFields">
-    <div class="inner-tabs">
-      <button class="inner-tab active" id="stayTabInfo"   onclick="switchStayTab('info')">📋 Info</button>
-      <button class="inner-tab"        id="stayTabFlight" onclick="switchStayTab('flight')">✈️ Flight</button>
-      <button class="inner-tab"        id="stayTabAccom"  onclick="switchStayTab('accom')">🏨 Stay</button>
-      <button class="inner-tab"        id="stayTabNotes"  onclick="switchStayTab('notes')">📝 Notes</button>
+<!-- APP (shown when logged in) -->
+<div id="app" style="display:none;">
+  <div class="header">
+    <span class="header-title">2026 Travel</span>
+    <div class="nav-group">
+      <button class="nav-arrow" id="btnPrev">‹</button>
+      <div class="nav-label" id="navLabel"></div>
+      <button class="nav-arrow" id="btnNext">›</button>
+      <button class="btn-today" id="btnToday">Today</button>
+      <div class="nav-divider"></div>
+      <button class="mcbtn" data-n="3">3</button>
+      <button class="mcbtn active" data-n="6">6</button>
+      <button class="mcbtn" data-n="9">9</button>
+      <button class="mcbtn" data-n="12">Year</button>
     </div>
+    <div class="header-actions">
+      <button class="btn btn-edit" id="btnExport">⬇ Export</button>
+      <button class="btn btn-edit" id="btnImportTrigger">⬆ Import</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <button class="btn btn-edit" id="btnSignOut">Sign out</button>
+      <button class="btn btn-edit" id="btnEditDrawer">✏️ Edit</button>
+      <button class="btn btn-add" id="btnAdd">＋ Add</button>
+    </div>
+  </div>
 
-    <!-- INFO panel -->
-    <div id="stayPanelInfo">
-      <div class="field">
-        <label>Country</label>
-        <select id="pCountry">
-          <option value="Spain|🇪🇸">🇪🇸 Spain</option>
-          <option value="Ireland|🇮🇪">🇮🇪 Ireland</option>
-          <option value="Thailand|🇹🇭">🇹🇭 Thailand</option>
-          <option value="Portugal|🇵🇹">🇵🇹 Portugal</option>
-          <option value="Italy|🇮🇹">🇮🇹 Italy</option>
-          <option value="Kazakhstan|🇰🇿">🇰🇿 Kazakhstan</option>
-          <option value="UK|🇬🇧">🇬🇧 UK</option>
-          <option value="USA|🇺🇸">🇺🇸 USA</option>
-          <option value="Canada|🇨🇦">🇨🇦 Canada</option>
-        </select>
+  <div class="status-bar" id="statusLine"></div>
+
+  <div class="cal-surface">
+    <div class="year-grid" id="yearGrid"></div>
+  </div>
+
+  <div class="summary">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <h3 style="margin-bottom:0;">Days per country —</h3>
+      <button id="btnSummaryPrev" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9a8070;padding:0 2px;line-height:1;">‹</button>
+      <span id="summaryYearLabel" style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#a09070;font-family:-apple-system,sans-serif;"></span>
+      <button id="btnSummaryNext" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9a8070;padding:0 2px;line-height:1;">›</button>
+    </div>
+    <div class="country-grid" id="countryGrid"></div>
+  </div>
+
+  <div class="legend">
+    <span><span class="ls" style="background:#bccde2;"></span>Spain (blues)</span>
+    <span><span class="ls" style="background:#b8dfc2;"></span>Ireland (greens)</span>
+    <span><span class="ls" style="background:#e8cda4;"></span>Thailand</span>
+    <span><span class="ls" style="background:#cac6de;"></span>Canada</span>
+    <span><span class="ls" style="background:#ead8a4;"></span>Portugal</span>
+    <span><span class="ls" style="background:#d6bca4;"></span>Kazakhstan</span>
+    <span><span class="ls" style="background:#f0cadc;"></span>Italy</span>
+    <span style="opacity:0.5;display:inline-flex;align-items:center;"><span class="ls" style="background:#b8dfc2;"></span>past</span>
+    <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:5px;height:5px;background:#d94040;border-radius:50%;"></span>unbooked</span>
+    <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:24px;height:10px;background:#9b6b8a;border-radius:2px;opacity:0.9;"></span>event</span>
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup-overlay" id="popupOverlay"></div>
+  <div class="popup" id="popup" onclick="event.stopPropagation()">
+    <div class="popup-header">
+      <span class="date-label" id="popupDateLabel"></span>
+      <button class="popup-close" id="btnPopupClose">✕</button>
+    </div>
+    <div class="toggle-tabs">
+      <button class="tab active" id="tabStay">🏠 Stay</button>
+      <button class="tab" id="tabEvent">📅 Event</button>
+    </div>
+    <div id="stayFields">
+      <div class="inner-tabs">
+        <button class="inner-tab active" id="stayTabInfo">📋 Info</button>
+        <button class="inner-tab" id="stayTabFlight">✈️ Flight</button>
+        <button class="inner-tab" id="stayTabAccom">🏨 Stay</button>
+        <button class="inner-tab" id="stayTabNotes">📝 Notes</button>
       </div>
-      <div class="field">
-        <label>Location</label>
-        <input type="text" id="pLabel" placeholder="e.g. Villa, Megan's…">
+      <div id="stayPanelInfo">
+        <div class="field"><label>Country</label>
+          <select id="pCountry">
+            <option value="Spain|🇪🇸">🇪🇸 Spain</option>
+            <option value="Ireland|🇮🇪">🇮🇪 Ireland</option>
+            <option value="Thailand|🇹🇭">🇹🇭 Thailand</option>
+            <option value="Portugal|🇵🇹">🇵🇹 Portugal</option>
+            <option value="Italy|🇮🇹">🇮🇹 Italy</option>
+            <option value="Kazakhstan|🇰🇿">🇰🇿 Kazakhstan</option>
+            <option value="UK|🇬🇧">🇬🇧 UK</option>
+            <option value="USA|🇺🇸">🇺🇸 USA</option>
+            <option value="Canada|🇨🇦">🇨🇦 Canada</option>
+          </select>
+        </div>
+        <div class="field"><label>Location</label><input type="text" id="pLabel" placeholder="e.g. Villa, Megan's…"></div>
+        <div class="field-row">
+          <div class="field"><label>Start</label><input type="text" id="pStart" placeholder="YYYY/MM/DD"></div>
+          <div class="field"><label>End</label><input type="text" id="pEnd" placeholder="YYYY/MM/DD"></div>
+        </div>
+        <div class="field"><label>Note</label><input type="text" id="pNote" placeholder="e.g. 🎵 Sonorama, passport…"></div>
+        <div class="field" style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pBooked" style="width:auto;">
+          <label for="pBooked" style="font-size:11px;text-transform:none;letter-spacing:0;color:#3d2b1f;">Booked</label>
+        </div>
       </div>
+      <div id="stayPanelFlight" style="display:none;">
+        <div class="field"><label>Inbound flight</label><input type="text" id="pFlightIn" placeholder="e.g. IB 3456, 08:30 MAD→DUB"></div>
+        <div class="field"><label>Inbound confirmation</label><input type="text" id="pFlightInRef" placeholder="Booking ref or URL"></div>
+        <div class="field" style="margin-top:4px;"><label>Outbound flight</label><input type="text" id="pFlightOut" placeholder="e.g. FR 9012, 19:45 DUB→MAD"></div>
+        <div class="field"><label>Outbound confirmation</label><input type="text" id="pFlightOutRef" placeholder="Booking ref or URL"></div>
+      </div>
+      <div id="stayPanelAccom" style="display:none;">
+        <div class="field"><label>Accommodation name</label><input type="text" id="pAccomName" placeholder="e.g. Airbnb Lisbon, Hotel Arts…"></div>
+        <div class="field"><label>Address</label><input type="text" id="pAccomAddr" placeholder="Street / area"></div>
+        <div class="field"><label>Confirmation / URL</label><input type="text" id="pAccomRef" placeholder="Booking ref or link"></div>
+        <div id="pAccomLink" style="display:none;margin-bottom:8px;"><a id="pAccomLinkA" href="#" target="_blank" style="font-size:10px;color:#6a8fc0;text-decoration:none;">🔗 Open link</a></div>
+      </div>
+      <div id="stayPanelNotes" style="display:none;">
+        <div class="field"><label>Trip notes</label>
+          <textarea id="pTripNotes" rows="7" placeholder="Itinerary ideas, packing list, reminders…" style="width:100%;font-size:11px;font-family:inherit;border:1px solid #d4c8bc;border-radius:5px;padding:5px 7px;background:#fff;color:#3d2b1f;resize:vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div id="eventFields" style="display:none;">
+      <div class="field"><label>Event name</label><input type="text" id="pEventLabel" placeholder="e.g. 💍 John, Planeta Sound"></div>
       <div class="field-row">
-        <div class="field"><label>Start</label><input type="text" id="pStart" placeholder="YYYY/MM/DD"></div>
-        <div class="field"><label>End</label><input type="text" id="pEnd" placeholder="YYYY/MM/DD"></div>
+        <div class="field"><label>Start</label><input type="text" id="pEventStart" placeholder="YYYY/MM/DD"></div>
+        <div class="field"><label>End</label><input type="text" id="pEventEnd" placeholder="YYYY/MM/DD"></div>
       </div>
-      <div class="field">
-        <label>Note</label>
-        <input type="text" id="pNote" placeholder="e.g. 🎵 Sonorama, passport…">
+      <div class="field"><label>Colour</label>
+        <div class="color-row" id="colorSwatches">
+          <div class="swatch picked" style="background:#9b6b8a;" data-color="#9b6b8a"></div>
+          <div class="swatch" style="background:#c2785a;" data-color="#c2785a"></div>
+          <div class="swatch" style="background:#7a9e6e;" data-color="#7a9e6e"></div>
+          <div class="swatch" style="background:#6a8fc0;" data-color="#6a8fc0"></div>
+          <div class="swatch" style="background:#c0a030;" data-color="#c0a030"></div>
+          <div class="swatch" style="background:#a05050;" data-color="#a05050"></div>
+          <input type="color" id="customColor" style="width:18px;height:18px;border-radius:50%;border:none;padding:0;cursor:pointer;background:none;" value="#9b6b8a">
+        </div>
       </div>
-      <div class="field" style="display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" id="pBooked" style="width:auto;">
-        <label for="pBooked" style="font-size:11px;text-transform:none;letter-spacing:0;color:#3d2b1f;">Booked</label>
-      </div>
-    </div>
-
-    <!-- FLIGHT panel -->
-    <div id="stayPanelFlight" style="display:none;">
-      <div class="field">
-        <label>Outbound flight</label>
-        <input type="text" id="pFlightOut" placeholder="e.g. IB 3456, 08:30 MAD→DUB">
-      </div>
-      <div class="field">
-        <label>Outbound confirmation</label>
-        <input type="text" id="pFlightOutRef" placeholder="Booking ref or URL">
-      </div>
-      <div class="field" style="margin-top:4px;">
-        <label>Return flight</label>
-        <input type="text" id="pFlightIn" placeholder="e.g. FR 9012, 19:45 DUB→MAD">
-      </div>
-      <div class="field">
-        <label>Return confirmation</label>
-        <input type="text" id="pFlightInRef" placeholder="Booking ref or URL">
+      <div class="field"><label>Note / URL</label><input type="text" id="pEventNote" placeholder="Link, venue, notes…"></div>
+      <div class="event-note-link" id="pEventNoteLink" style="display:none;margin-bottom:8px;">
+        <a id="pEventNoteLinkA" href="#" target="_blank" style="font-size:10px;color:#6a8fc0;text-decoration:none;">🔗 Open link</a>
       </div>
     </div>
-
-    <!-- NOTES panel -->
-    <div id="stayPanelNotes" style="display:none;">
-      <div class="field">
-        <label>Trip notes</label>
-        <textarea id="pTripNotes" rows="7" placeholder="Itinerary ideas, packing list, reminders…" style="width:100%;font-size:11px;font-family:inherit;border:1px solid #d4c8bc;border-radius:5px;padding:5px 7px;background:#fff;color:#3d2b1f;resize:vertical;"></textarea>
-      </div>
-    </div>
-
-    <!-- ACCOMMODATION panel -->
-    <div id="stayPanelAccom" style="display:none;">
-      <div class="field">
-        <label>Accommodation name</label>
-        <input type="text" id="pAccomName" placeholder="e.g. Airbnb Lisbon, Hotel Arts…">
-      </div>
-      <div class="field">
-        <label>Address</label>
-        <input type="text" id="pAccomAddr" placeholder="Street / area">
-      </div>
-      <div class="field">
-        <label>Confirmation / URL</label>
-        <input type="text" id="pAccomRef" placeholder="Booking ref or link" oninput="updateAccomLink(this.value)">
-      </div>
-      <div id="pAccomLink" style="display:none;margin-bottom:8px;">
-        <a id="pAccomLinkA" href="#" target="_blank" style="font-size:10px;color:#6a8fc0;text-decoration:none;">🔗 Open link</a>
-      </div>
+    <div class="popup-actions" id="popupActions">
+      <button class="btn btn-delete" id="btnDelete" style="display:none;">Delete</button>
+      <button class="btn" id="btnSave">Save</button>
     </div>
   </div>
 
-  <!-- EVENT FIELDS -->
-  <div id="eventFields" style="display:none;">
-    <div class="field">
-      <label>Event name</label>
-      <input type="text" id="pEventLabel" placeholder="e.g. 💍 John, Planeta Sound">
+  <!-- EDIT DRAWER -->
+  <div class="edit-overlay" id="editOverlay"></div>
+  <div class="edit-drawer" id="editDrawer" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <h2>Edit Stays &amp; Events</h2>
+      <button class="popup-close" id="btnDrawerClose">✕</button>
     </div>
-    <div class="field-row">
-      <div class="field"><label>Start</label><input type="text" id="pEventStart" placeholder="YYYY/MM/DD"></div>
-      <div class="field"><label>End</label><input type="text" id="pEventEnd" placeholder="YYYY/MM/DD"></div>
-    </div>
-    <div class="field">
-      <label>Colour</label>
-      <div class="color-row" id="colorSwatches">
-        <div class="swatch picked" style="background:#9b6b8a;" data-color="#9b6b8a" onclick="pickColor(this)"></div>
-        <div class="swatch" style="background:#c2785a;" data-color="#c2785a" onclick="pickColor(this)"></div>
-        <div class="swatch" style="background:#7a9e6e;" data-color="#7a9e6e" onclick="pickColor(this)"></div>
-        <div class="swatch" style="background:#6a8fc0;" data-color="#6a8fc0" onclick="pickColor(this)"></div>
-        <div class="swatch" style="background:#c0a030;" data-color="#c0a030" onclick="pickColor(this)"></div>
-        <div class="swatch" style="background:#a05050;" data-color="#a05050" onclick="pickColor(this)"></div>
-        <input type="color" id="customColor" style="width:18px;height:18px;border-radius:50%;border:none;padding:0;cursor:pointer;background:none;" value="#9b6b8a" oninput="pickCustomColor(this.value)">
-      </div>
-    </div>
-    <div class="field">
-      <label>Note / URL</label>
-      <input type="text" id="pEventNote" placeholder="Link, venue, notes…" oninput="updateEventNoteLink(this.value)">
-    </div>
-    <div class="event-note-link" id="pEventNoteLink">
-      <a id="pEventNoteLinkA" href="#" target="_blank">🔗 Open link</a>
-    </div>
-  </div>
-
-  <div class="popup-actions" id="popupActions">
-    <button class="btn btn-delete" id="btnDelete" style="display:none;" onclick="deleteEntry()">Delete</button>
-    <button class="btn" onclick="saveEntry()">Save</button>
+    <p class="drawer-subtitle">Past stays are locked. Future stays and all events are editable.</p>
+    <div class="drawer-section-title">Stays</div>
+    <table class="trip-table">
+      <thead><tr><th>Location</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+      <tbody id="tripBody"></tbody>
+    </table>
+    <div class="drawer-section-title">Events</div>
+    <table class="trip-table">
+      <thead><tr><th>Event</th><th>Start</th><th>End</th><th>Note / URL</th></tr></thead>
+      <tbody id="eventBody"></tbody>
+    </table>
+    <button class="save-btn" id="btnDrawerSave">Save &amp; close</button>
   </div>
 </div>
 
-<!-- EDIT DRAWER -->
-<div class="edit-overlay" id="editOverlay" onclick="closeEditDrawer()"></div>
-<div class="edit-drawer" id="editDrawer" onclick="event.stopPropagation()">
-  <div class="drawer-header">
-    <h2>Edit Stays &amp; Events</h2>
-    <button class="popup-close" onclick="closeEditDrawer()">✕</button>
-  </div>
-  <p class="drawer-subtitle">Past stays are locked. Future stays and all events are editable.</p>
-
-  <div class="drawer-section-title">Stays</div>
-  <table class="trip-table">
-    <thead><tr><th>Location</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
-    <tbody id="tripBody"></tbody>
-  </table>
-
-  <div class="drawer-section-title">Events</div>
-  <table class="trip-table">
-    <thead><tr><th>Event</th><th>Start</th><th>End</th><th>Note / URL</th></tr></thead>
-    <tbody id="eventBody"></tbody>
-  </table>
-
-  <button class="save-btn" onclick="saveDrawerAndClose()">Save &amp; close</button>
-</div>
-
-<script>
-// ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const TODAY = new Date();
-TODAY.setHours(0,0,0,0);
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const DOT_COLORS = {
-  'c-villa':'#b8c9e0','c-gijon':'#8aacc8','c-madrid':'#ccd9ed','c-bilbao':'#9ab4d0',
-  'c-santander':'#a8ccd8','c-aranda':'#7898b8','c-avila':'#c0cfe0',
-  'c-ireland':'#b8dec0','c-megans':'#9acc9e',
-  'c-thailand':'#e8c9a0','c-london':'#c9b8e0','c-italy':'#f0c8d8',
-  'c-boston':'#c8d4b8','c-toronto':'#c8c4dc','c-portugal':'#e8d8a0','c-kazakhstan':'#d4b8a0',
-};
-const COUNTRY_CSS = {
-  'Spain':'c-villa','Ireland':'c-ireland','Thailand':'c-thailand','Portugal':'c-portugal',
-  'Italy':'c-italy','Kazakhstan':'c-kazakhstan','UK':'c-london','USA':'c-boston','Canada':'c-toronto',
-};
-const COUNTRY_FLAGS = {
-  "Spain":"🇪🇸","Ireland":"🇮🇪","Thailand":"🇹🇭","Toronto":"🇨🇦","Kazakhstan":"🇰🇿",
-  "Portugal":"🇵🇹","Italy":"🇮🇹","Boston":"🇺🇸","London":"🇬🇧","Canada":"🇨🇦","USA":"🇺🇸","UK":"🇬🇧",
-};
-
-// ─── DEFAULT DATA  (dates: YYYYMMDD) ─────────────────────────────────────────
-const DEFAULT_STAYS = [
-  {id:"s1",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260101",end:"20260119",booked:true,  note:""},
-  {id:"s2",  type:"stay", country:"Thailand",   flag:"🇹🇭", label:"Thailand",  cssClass:"c-thailand",  start:"20260119",end:"20260212",booked:true,  note:""},
-  {id:"s3",  type:"stay", country:"UK",         flag:"🇬🇧", label:"London",    cssClass:"c-london",    start:"20260212",end:"20260213",booked:true,  note:""},
-  {id:"s4",  type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260213",end:"20260217",booked:true,  note:""},
-  {id:"s5",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Madrid",    cssClass:"c-madrid",    start:"20260217",end:"20260220",booked:true,  note:""},
-  {id:"s6",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260220",end:"20260303",booked:true,  note:""},
-  {id:"s7",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Gijón",     cssClass:"c-gijon",     start:"20260303",end:"20260307",booked:true,  note:""},
-  {id:"s8",  type:"stay", country:"Italy",      flag:"🇮🇹", label:"Italy",     cssClass:"c-italy",     start:"20260307",end:"20260313",booked:true,  note:""},
-  {id:"s9",  type:"stay", country:"Spain",      flag:"🇪🇸", label:"Gijón",     cssClass:"c-gijon",     start:"20260313",end:"20260320",booked:true,  note:""},
-  {id:"s10", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260320",end:"20260322",booked:true,  note:""},
-  {id:"s11", type:"stay", country:"USA",        flag:"🇺🇸", label:"Boston",    cssClass:"c-boston",    start:"20260322",end:"20260329",booked:true,  note:""},
-  {id:"s12", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260329",end:"20260405",booked:true,  note:""},
-  {id:"s13", type:"stay", country:"Canada",     flag:"🇨🇦", label:"Toronto",   cssClass:"c-toronto",   start:"20260405",end:"20260419",booked:true,  note:""},
-  {id:"s14", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260419",end:"20260502",booked:true,  note:""},
-  {id:"s15", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260502",end:"20260529",booked:true,  note:""},
-  {id:"s16", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Bilbao",    cssClass:"c-bilbao",    start:"20260529",end:"20260531",booked:true,  note:""},
-  {id:"s17", type:"stay", country:"Portugal",   flag:"🇵🇹", label:"Portugal",  cssClass:"c-portugal",  start:"20260531",end:"20260607",booked:false, note:""},
-  {id:"s18", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260607",end:"20260611",booked:false, note:""},
-  {id:"s19", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Megan's",   cssClass:"c-megans",    start:"20260611",end:"20260717",booked:true,  note:""},
-  {id:"s20", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Santander", cssClass:"c-santander", start:"20260717",end:"20260719",booked:true,  note:""},
-  {id:"s21", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260719",end:"20260805",booked:true,  note:""},
-  {id:"s22", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Aranda",    cssClass:"c-aranda",    start:"20260805",end:"20260809",booked:true,  note:""},
-  {id:"s23", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260809",end:"20260811",booked:true,  note:""},
-  {id:"s24", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20260811",end:"20260905",booked:false, note:""},
-  {id:"s25", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Villa",     cssClass:"c-villa",     start:"20260905",end:"20260918",booked:true,  note:""},
-  {id:"s26", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Ávila",     cssClass:"c-avila",     start:"20260918",end:"20260920",booked:false, note:""},
-  {id:"s27", type:"stay", country:"Kazakhstan", flag:"🇰🇿", label:"Almaty",    cssClass:"c-kazakhstan",start:"20260920",end:"20260928",booked:false, note:""},
-  {id:"s28", type:"stay", country:"Kazakhstan", flag:"🇰🇿", label:"Kazakhstan",cssClass:"c-kazakhstan",start:"20260928",end:"20261004",booked:false, note:""},
-  {id:"s29", type:"stay", country:"Ireland",    flag:"🇮🇪", label:"Ireland",   cssClass:"c-ireland",   start:"20261004",end:"20261201",booked:false, note:""},
-  {id:"s30", type:"stay", country:"Spain",      flag:"🇪🇸", label:"Spain",     cssClass:"c-villa",     start:"20261201",end:"20261231",booked:false, note:""},
-];
-const DEFAULT_EVENTS = [
-  {id:"e1", type:"event", label:"💍 John",       start:"20260530",end:"20260530",color:"#9b6b8a",note:""},
-  {id:"e2", type:"event", label:"Planeta Sound", start:"20260710",end:"20260712",color:"#c2785a",note:""},
-  {id:"e3", type:"event", label:"Santiago",      start:"20260725",end:"20260725",color:"#7a9e6e",note:""},
-  {id:"e4", type:"event", label:"💍 Efrén",       start:"20260919",end:"20260919",color:"#9b6b8a",note:""},
-  {id:"e5", type:"event", label:"💍 Reception",   start:"20260924",end:"20260924",color:"#9b6b8a",note:""},
-  {id:"e6", type:"event", label:"💍 Dameli",       start:"20260927",end:"20260927",color:"#9b6b8a",note:""},
-  {id:"e7", type:"event", label:"🎵 Sonorica",    start:"20260717",end:"20260718",color:"#6a8fc0",note:""},
-  {id:"e8", type:"event", label:"🎵 Sonorama",    start:"20260805",end:"20260808",color:"#c0a030",note:""},
-];
-
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-function uid() { return Math.random().toString(36).slice(2,10); }
-
-// YYYYMMDD ↔ Date
-function ymdToDate(s) {
-  return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8));
-}
-function dateToYMD(d) {
-  return String(d.getFullYear()) +
-    String(d.getMonth()+1).padStart(2,'0') +
-    String(d.getDate()).padStart(2,'0');
-}
-
-// Display format: YYYY/MM/DD
-function fmtYMD(s) { return s.slice(0,4)+'/'+s.slice(4,6)+'/'+s.slice(6,8); }
-function parseYMD(s) { return s.replace(/\//g,''); }
-
-// Calendar key: YYYYMMDD
-function calKey(year, month, day) {
-  return String(year) + String(month+1).padStart(2,'0') + String(day).padStart(2,'0');
-}
-function daysInMonth(year, month) {
-  return new Date(year, month+1, 0).getDate();
-}
-function firstDOW(year, month) {
-  const d = new Date(year, month, 1).getDay();
-  return d === 0 ? 6 : d - 1; // Mon=0
-}
-
-// ─── MIGRATION ────────────────────────────────────────────────────────────────
-function migrateMMDD(s) {
-  // "MMDD" (4 chars) → "2026MMDD"
-  if (s && s.length === 4) return '2026' + s;
-  return s;
-}
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
-function loadData() {
-  try {
-    const raw = localStorage.getItem('travel-2026');
-    if (raw) {
-      const d = JSON.parse(raw);
-      // migrate MMDD → YYYYMMDD
-      (d.stays||[]).forEach(s => {
-        s.start = migrateMMDD(s.start);
-        s.end   = migrateMMDD(s.end);
-        if (s.note===undefined) s.note='';
-        if (s.note && (s.note.includes('Sonorama') || s.note.includes('Sonorica'))) s.note = '';
-      });
-      (d.events||[]).forEach(e => {
-        e.start = migrateMMDD(e.start);
-        e.end   = migrateMMDD(e.end);
-        if (e.note===undefined) e.note='';
-      });
-      // add Sonorica + Sonorama if missing
-      const eids = new Set((d.events||[]).map(e=>e.id));
-      if (!eids.has('e7')) d.events.push({id:"e7",type:"event",label:"🎵 Sonorica",start:"20260717",end:"20260718",color:"#6a8fc0",note:""});
-      if (!eids.has('e8')) d.events.push({id:"e8",type:"event",label:"🎵 Sonorama",start:"20260805",end:"20260808",color:"#c0a030",note:""});
-      d.events.sort((a,b)=>a.start.localeCompare(b.start));
-      return d;
-    }
-  } catch(e) {}
-  return { stays: DEFAULT_STAYS.map(s=>({...s})), events: DEFAULT_EVENTS.map(e=>({...e})) };
-}
-function saveData() { localStorage.setItem('travel-2026', JSON.stringify(DATA)); }
-
-let DATA = loadData();
-// view state: year + month (0-indexed) of top-left
-let viewYear = TODAY.getFullYear();
-let viewMonth = TODAY.getMonth();
-let viewMonths = 6;
-let summaryYear = null; // set on first renderSummary
-let popupMode = 'stay';
-let popupEditStayId = null;
-let popupEditEventId = null;
-let selectedColor = '#9b6b8a';
-
-// ─── DAY MAPS ─────────────────────────────────────────────────────────────────
-function buildDayMap() {
-  const dayMap = {}, eventMap = {};
-  DATA.stays.forEach(stay => {
-    let d = ymdToDate(stay.start);
-    const e = ymdToDate(stay.end);
-    let isFirst = true;
-    while (d < e) {
-      const key = dateToYMD(d);
-      if (!dayMap[key]) dayMap[key] = { ...stay, isFirst };
-      isFirst = false;
-      d.setDate(d.getDate()+1);
-    }
-  });
-  DATA.events.forEach(ev => {
-    let d = ymdToDate(ev.start);
-    const e = ymdToDate(ev.end);
-    let isFirst = true;
-    while (d <= e) {
-      const key = dateToYMD(d);
-      if (!eventMap[key]) eventMap[key] = [];
-      eventMap[key].push({ ...ev, isFirst });
-      isFirst = false;
-      d.setDate(d.getDate()+1);
-    }
-  });
-  return { dayMap, eventMap };
-}
-
-// ─── RENDER ───────────────────────────────────────────────────────────────────
-function render() {
-  renderNav();
-  renderCalendar();
-  renderSummary();
-  renderStatus();
-}
-
-function renderNav() {
-  let label;
-  if (viewMonths === 12) {
-    label = String(viewYear);
-  } else {
-    const endAbsMonth = viewMonth + viewMonths - 1;
-    const endYear  = viewYear + Math.floor(endAbsMonth / 12);
-    const endMonth = endAbsMonth % 12;
-    const startStr = MONTHS[viewMonth].slice(0,3) + ' ' + viewYear;
-    const endStr   = MONTHS[endMonth].slice(0,3) + ' ' + endYear;
-    label = startStr + ' – ' + endStr;
-  }
-  document.getElementById('navLabel').textContent = label;
-}
-
-function renderCalendar() {
-  const { dayMap, eventMap } = buildDayMap();
-  const grid = document.getElementById('yearGrid');
-  grid.innerHTML = '';
-  const cols = viewMonths === 12 ? 4 : viewMonths <= 3 ? 3 : 3;
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  // update nth-child border rule to match column count
-  const styleId = 'dynamic-cal-style';
-  let dynStyle = document.getElementById(styleId);
-  if (!dynStyle) { dynStyle = document.createElement('style'); dynStyle.id = styleId; document.head.appendChild(dynStyle); }
-  dynStyle.textContent = `.month-block:nth-child(-n+${cols}) .month-name { padding-top: 0; } .month-block:nth-child(n+${cols+1}) { border-top: 1px solid #e0d8c4; }`;
-
-  // pre-pass flag suppression across all data (year-aware)
-  let prevCountry = null;
-  const showFlag = {};
-  const allKeys = Object.keys(dayMap).sort();
-  allKeys.forEach(key => {
-    const t = dayMap[key];
-    if (t && t.isFirst) {
-      showFlag[key] = t.country !== prevCountry;
-      prevCountry = t.country;
-    }
-  });
-
-  for (let mi = 0; mi < viewMonths; mi++) {
-    const absMonth = viewMonth + mi;
-    const year  = viewYear + Math.floor(absMonth / 12);
-    const month = absMonth % 12;
-
-    const block = document.createElement('div');
-    block.className = 'month-block';
-
-    const off = firstDOW(year, month);
-    const dim = daysInMonth(year, month);
-    const slots = [];
-    for (let i=0; i<off; i++) slots.push(null);
-    for (let d=1; d<=dim; d++) slots.push(d);
-    while (slots.length % 7 !== 0) slots.push(null);
-    const weeks = [];
-    for (let i=0; i<slots.length; i+=7) weeks.push(slots.slice(i,i+7));
-
-    let html = `<div class="month-name">${MONTHS[month]} ${year}</div>
-    <div class="dow-row"><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div></div>`;
-
-    weeks.forEach(week => {
-      // collect all events visible in this week, grouped by event id, per row slot
-      const seenByRow = [new Set(), new Set()]; // row0, row1
-      const weekEvents = []; // { startCol, span, row, ...ev }
-
-      week.forEach((day, col) => {
-        if (!day) return;
-        const key = calKey(year, month, day);
-        const evList = eventMap[key] || [];
-        evList.forEach(ev => {
-          // find which row this event already occupies (or assign next available)
-          let row = -1;
-          for (let r = 0; r < seenByRow.length; r++) {
-            if (seenByRow[r].has(ev.id)) { row = r; break; }
-          }
-          if (row === -1) {
-            // new event this week — assign to first available row
-            for (let r = 0; r < seenByRow.length; r++) {
-              if (!seenByRow[r].has(ev.id)) {
-                // check no other event already claimed this row starting this col
-                row = r; break;
-              }
-            }
-            if (row === -1) return; // more than 2 events, skip overflow
-            // compute span
-            let span = 0;
-            for (let c = col; c < 7; c++) {
-              const d2 = week[c]; if (!d2) break;
-              const k2 = calKey(year, month, d2);
-              const evs2 = eventMap[k2] || [];
-              if (evs2.some(e2 => e2.id === ev.id)) span++;
-              else break;
-            }
-            weekEvents.push({ startCol: col, span, row, label: ev.label, color: ev.color, id: ev.id, startKey: key });
-            seenByRow[row].add(ev.id);
-          }
-        });
-      });
-
-      html += `<div class="week-wrap">`;
-      week.forEach(day => {
-        if (!day) { html += `<div class="d empty"></div>`; return; }
-        const key = calKey(year, month, day);
-        const date = new Date(year, month, day);
-        const past = date < TODAY;
-        const isToday = date.getTime() === TODAY.getTime();
-        const t = dayMap[key];
-        let cls = 'd' + (past?' past':'') + (isToday?' today':'') + ' ' + (t ? t.cssClass : 'notrip');
-
-        const needsPin = t && t.isFirst && !t.booked;
-        const flag = (t && t.isFirst && showFlag[key]) ? `${t.flag} ` : '';
-        const locStr = (t && t.isFirst) ? `${flag}${t.label}` : '';
-        let inner = `<div class="d-num-row">${needsPin?'<span class="d-pin"></span>':''}<span class="d-num">${day}</span>${locStr ? `<span class="d-loc">${locStr}</span>` : ''}</div>`;
-
-        if (t && t.isFirst && t.note) {
-          const isUrl = t.note.startsWith('http://') || t.note.startsWith('https://');
-          inner += `<span class="d-note">${isUrl ? '🔗' : t.note}</span>`;
-        }
-
-        html += `<div class="${cls}" data-key="${key}" onclick="handleDayClick(event,'${key}')">${inner}</div>`;
-      });
-
-      weekEvents.forEach(ev => {
-        const leftPct = (ev.startCol/7*100).toFixed(2);
-        const widthPct = (ev.span/7*100).toFixed(2);
-        const rowCls = ev.row === 1 ? ' row2' : '';
-        html += `<div class="event-bar-abs${rowCls}" style="left:calc(${leftPct}% + 1px);width:calc(${widthPct}% - 2px);color:${ev.color};" onclick="event.stopPropagation();handleEventBarClick(event,'${ev.id}','${ev.startKey}')"><span>${ev.label}</span></div>`;
-      });
-
-      html += `</div>`;
-    });
-
-    block.innerHTML = html;
-    grid.appendChild(block);
-  }
-}
-
-function renderSummary() {
-  const allDays = {}, allUnbooked = {};
-  DATA.stays.forEach(s => {
-    const c = s.country;
-    let d = ymdToDate(s.start);
-    const end = ymdToDate(s.end);
-    while (d < end) {
-      const y = String(d.getFullYear());
-      if (!allDays[y]) allDays[y] = {};
-      if (!allUnbooked[y]) allUnbooked[y] = {};
-      allDays[y][c] = (allDays[y][c]||0) + 1;
-      if (!s.booked) allUnbooked[y][c] = true;
-      d.setDate(d.getDate()+1);
-    }
-  });
-
-  const years = Object.keys(allDays).sort();
-  const todayYear = String(TODAY.getFullYear());
-  if (!summaryYear || !years.includes(summaryYear))
-    summaryYear = years.includes(todayYear) ? todayYear : years[0];
-
-  document.getElementById('summaryYearLabel').textContent = summaryYear;
-
-  const days = allDays[summaryYear] || {};
-  const unbooked = allUnbooked[summaryYear] || {};
-  const order = Object.keys(days).sort((a,b)=>days[b]-days[a]);
-  document.getElementById('countryGrid').innerHTML = order.map(c => `
-    <div class="country-item">
-      <div class="country-name">${COUNTRY_FLAGS[c]||''} ${c}</div>
-      <div class="country-days">${days[c]}</div>
-      <div class="country-sub">days</div>
-      ${unbooked[c]?'<div class="country-pin"><span style="display:inline-block;width:5px;height:5px;background:#d94040;border-radius:50%;"></span> some unbooked</div>':''}
-    </div>`).join('');
-}
-
-function shiftSummaryYear(dir) {
-  // collect all years that actually have day counts
-  const allDays = {};
-  DATA.stays.forEach(s => {
-    let d = ymdToDate(s.start);
-    const end = ymdToDate(s.end);
-    while (d < end) { allDays[String(d.getFullYear())] = true; d.setDate(d.getDate()+1); }
-  });
-  const allYears = Object.keys(allDays).sort();
-  const idx = allYears.indexOf(summaryYear);
-  const next = allYears[idx + dir];
-  if (next) { summaryYear = next; renderSummary(); }
-}
-
-function renderStatus() {
-  const { dayMap } = buildDayMap();
-  const todayKey = dateToYMD(TODAY);
-  const t = dayMap[todayKey];
-  const unbooked = DATA.stays.filter(s=>!s.booked).length;
-  const nextUnbooked = DATA.stays.find(s=>!s.booked && ymdToDate(s.start)>=TODAY);
-  const todayStr = t ? `${t.flag} ${t.label}` : 'no trip';
-  document.getElementById('statusLine').innerHTML =
-    `<span>Today: ${todayStr}</span>` +
-    `<span class="unbooked">● ${unbooked} still to book</span>` +
-    (nextUnbooked ? `<span>Next unbooked: ${nextUnbooked.flag} ${nextUnbooked.label} (${fmtYMD(nextUnbooked.start)})</span>` : '');
-}
-
-// ─── NAVIGATION ───────────────────────────────────────────────────────────────
-function shiftView(dir) {
-  if (viewMonths === 12) {
-    viewYear += dir;
-  } else {
-    viewMonth += dir * viewMonths;
-    while (viewMonth < 0)  { viewMonth += 12; viewYear--; }
-    while (viewMonth > 11) { viewMonth -= 12; viewYear++; }
-  }
-  render();
-}
-function snapToToday() {
-  if (viewMonths === 12) {
-    viewYear  = TODAY.getFullYear();
-    viewMonth = 0;
-  } else {
-    viewYear  = TODAY.getFullYear();
-    viewMonth = TODAY.getMonth();
-  }
-  render();
-}
-function setViewMonths(n) {
-  viewMonths = n;
-  document.querySelectorAll('.mcbtn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.n)===n));
-  if (n === 12) {
-    viewYear  = TODAY.getFullYear();
-    viewMonth = 0;
-  } else {
-    viewYear  = TODAY.getFullYear();
-    viewMonth = TODAY.getMonth();
-  }
-  render();
-}
-
-// ─── POPUP ────────────────────────────────────────────────────────────────────
-function handleDayClick(evt, key) {
-  const { dayMap, eventMap } = buildDayMap();
-  const stay   = dayMap[key];
-  const evList = eventMap[key] || [];
-  const ev     = evList[0] || null;
-  popupEditStayId  = stay ? stay.id : null;
-  popupEditEventId = ev   ? ev.id   : null;
-  if (stay)      openPopupEditStay(evt, stay.id, key);
-  else if (ev)   openPopupEditEvent(evt, ev.id, key);
-  else           openPopupNew(evt, key);
-}
-
-function handleEventBarClick(evt, evId, startKey) {
-  popupEditStayId  = null;
-  popupEditEventId = evId;
-  openPopupEditEvent(evt, evId, startKey);
-}
-
-function clearStayFields() {
-  document.getElementById('pLabel').value    = '';
-  document.getElementById('pStart').value    = '';
-  document.getElementById('pEnd').value      = '';
-  document.getElementById('pNote').value     = '';
-  document.getElementById('pBooked').checked = false;
-  document.getElementById('pCountry').value  = 'Spain|🇪🇸';
-  document.getElementById('pFlightOut').value    = '';
-  document.getElementById('pFlightOutRef').value = '';
-  document.getElementById('pFlightIn').value     = '';
-  document.getElementById('pFlightInRef').value  = '';
-  document.getElementById('pAccomName').value    = '';
-  document.getElementById('pAccomAddr').value    = '';
-  document.getElementById('pAccomRef').value     = '';
-  document.getElementById('pAccomLink').style.display = 'none';
-  document.getElementById('pTripNotes').value    = '';
-  switchStayTab('info');
-}
-
-function openPopupNew(evt, key) {
-  popupEditStayId = null; popupEditEventId = null;
-  switchPopupTab('stay');
-  clearStayFields();
-  document.getElementById('pStart').value = key ? fmtYMD(key) : '';
-  document.getElementById('pEnd').value   = key ? fmtYMD(key) : '';
-  document.getElementById('pEventLabel').value = '';
-  document.getElementById('pEventStart').value = key ? fmtYMD(key) : '';
-  document.getElementById('pEventEnd').value   = key ? fmtYMD(key) : '';
-  document.getElementById('pEventNote').value  = '';
-  document.getElementById('pEventNoteLink').style.display = 'none';
-  document.getElementById('btnDelete').style.display = 'none';
-  const year = key ? +key.slice(0,4) : TODAY.getFullYear();
-  const m    = key ? +key.slice(4,6)-1 : TODAY.getMonth();
-  const d    = key ? +key.slice(6,8)   : TODAY.getDate();
-  document.getElementById('popupDateLabel').textContent = MONTHS[m].slice(0,3) + ' ' + d + ', ' + year;
-  positionAndShowPopup(evt);
-}
-
-function openPopupEditStay(evt, id, key) {
-  switchPopupTab('stay');
-  document.getElementById('btnDelete').style.display = '';
-  const year = +key.slice(0,4), m = +key.slice(4,6)-1, d = +key.slice(6,8);
-  document.getElementById('popupDateLabel').textContent = MONTHS[m].slice(0,3) + ' ' + d + ', ' + year;
-  const s = DATA.stays.find(x=>x.id===id);
-  document.getElementById('pCountry').value      = s.country + '|' + s.flag;
-  document.getElementById('pLabel').value        = s.label;
-  document.getElementById('pStart').value        = fmtYMD(s.start);
-  document.getElementById('pEnd').value          = fmtYMD(s.end);
-  document.getElementById('pNote').value         = s.note || '';
-  document.getElementById('pBooked').checked     = s.booked;
-  document.getElementById('pFlightOut').value    = s.flightOut    || '';
-  document.getElementById('pFlightOutRef').value = s.flightOutRef || '';
-  document.getElementById('pFlightIn').value     = s.flightIn     || '';
-  document.getElementById('pFlightInRef').value  = s.flightInRef  || '';
-  document.getElementById('pAccomName').value    = s.accomName    || '';
-  document.getElementById('pAccomAddr').value    = s.accomAddr    || '';
-  document.getElementById('pAccomRef').value     = s.accomRef     || '';
-  updateAccomLink(s.accomRef || '');
-  document.getElementById('pTripNotes').value = s.tripNotes || '';
-  switchStayTab('info');
-  positionAndShowPopup(evt);
-}
-
-function openPopupEditEvent(evt, id, key) {
-  switchPopupTab('event');
-  document.getElementById('btnDelete').style.display = '';
-  const year = +key.slice(0,4), m = +key.slice(4,6)-1, d = +key.slice(6,8);
-  document.getElementById('popupDateLabel').textContent = MONTHS[m].slice(0,3) + ' ' + d + ', ' + year;
-  const e = DATA.events.find(x=>x.id===id);
-  document.getElementById('pEventLabel').value = e.label;
-  document.getElementById('pEventStart').value = fmtYMD(e.start);
-  document.getElementById('pEventEnd').value   = fmtYMD(e.end);
-  document.getElementById('pEventNote').value  = e.note || '';
-  selectedColor = e.color;
-  document.querySelectorAll('.swatch').forEach(sw => sw.classList.toggle('picked', sw.dataset.color === e.color));
-  document.getElementById('customColor').value = e.color;
-  updateEventNoteLink(e.note || '');
-  positionAndShowPopup(evt);
-}
-
-function positionAndShowPopup(evt) {
-  const popup = document.getElementById('popup');
-  popup.style.left = '-9999px'; popup.style.top = '-9999px'; popup.style.transform = '';
-  document.getElementById('popupOverlay').classList.add('open');
-  popup.style.display = 'block';
-  if (evt) {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const pw = 240, ph = 400;
-    let x = evt.clientX + 8, y = evt.clientY + 8;
-    if (x + pw > vw - 8) x = evt.clientX - pw - 8;
-    if (y + ph > vh - 8) y = evt.clientY - ph - 8;
-    if (x < 8) x = 8; if (y < 8) y = 8;
-    popup.style.left = x + 'px'; popup.style.top = y + 'px';
-  } else {
-    popup.style.left = '50%'; popup.style.top = '50%';
-    popup.style.transform = 'translate(-50%,-50%)';
-  }
-}
-
-function closePopup() {
-  document.getElementById('popupOverlay').classList.remove('open');
-  document.getElementById('popup').style.display = 'none';
-  document.getElementById('popup').style.transform = '';
-}
-
-function switchPopupTab(type) {
-  popupMode = type;
-  document.getElementById('tabStay').classList.toggle('active', type==='stay');
-  document.getElementById('tabEvent').classList.toggle('active', type==='event');
-  document.getElementById('stayFields').style.display  = type==='stay'  ? '' : 'none';
-  document.getElementById('eventFields').style.display = type==='event' ? '' : 'none';
-  document.getElementById('btnDelete').style.display =
-    (type==='stay' ? popupEditStayId : popupEditEventId) ? '' : 'none';
-}
-
-function switchStayTab(tab) {
-  ['info','flight','accom','notes'].forEach(t => {
-    document.getElementById('stayTab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t===tab);
-    document.getElementById('stayPanel' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t===tab ? '' : 'none';
-  });
-}
-function updateAccomLink(val) {
-  const show = val && (val.startsWith('http://') || val.startsWith('https://'));
-  document.getElementById('pAccomLink').style.display = show ? '' : 'none';
-  if (show) document.getElementById('pAccomLinkA').href = val;
-}
-
-function pickColor(el) {
-  selectedColor = el.dataset.color;
-  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('picked'));
-  el.classList.add('picked');
-  document.getElementById('customColor').value = selectedColor;
-}
-function pickCustomColor(val) {
-  selectedColor = val;
-  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('picked'));
-}
-function updateEventNoteLink(val) {
-  const link = document.getElementById('pEventNoteLink');
-  const a    = document.getElementById('pEventNoteLinkA');
-  if (val && (val.startsWith('http://') || val.startsWith('https://'))) {
-    a.href = val; link.style.display = '';
-  } else { link.style.display = 'none'; }
-}
-
-function saveEntry() {
-  if (popupMode === 'stay') {
-    const [country, flag] = document.getElementById('pCountry').value.split('|');
-    const label       = document.getElementById('pLabel').value.trim() || country;
-    const start       = parseYMD(document.getElementById('pStart').value);
-    const end         = parseYMD(document.getElementById('pEnd').value);
-    const note        = document.getElementById('pNote').value.trim();
-    const booked      = document.getElementById('pBooked').checked;
-    const cssClass    = COUNTRY_CSS[country] || 'c-villa';
-    const flightOut    = document.getElementById('pFlightOut').value.trim();
-    const flightOutRef = document.getElementById('pFlightOutRef').value.trim();
-    const flightIn     = document.getElementById('pFlightIn').value.trim();
-    const flightInRef  = document.getElementById('pFlightInRef').value.trim();
-    const accomName    = document.getElementById('pAccomName').value.trim();
-    const accomAddr    = document.getElementById('pAccomAddr').value.trim();
-    const accomRef     = document.getElementById('pAccomRef').value.trim();
-    const tripNotes    = document.getElementById('pTripNotes').value.trim();
-    if (start.length !== 8 || end.length !== 8) return;
-    const fields = { country, flag, label, cssClass, start, end, booked, note, flightOut, flightOutRef, flightIn, flightInRef, accomName, accomAddr, accomRef, tripNotes };
-    if (popupEditStayId) {
-      Object.assign(DATA.stays.find(x=>x.id===popupEditStayId), fields);
-    } else {
-      DATA.stays.push({ id:uid(), type:'stay', ...fields });
-      DATA.stays.sort((a,b)=>a.start.localeCompare(b.start));
-    }
-  } else {
-    const label = document.getElementById('pEventLabel').value.trim();
-    const start = parseYMD(document.getElementById('pEventStart').value);
-    const end   = parseYMD(document.getElementById('pEventEnd').value);
-    const note  = document.getElementById('pEventNote').value.trim();
-    if (!label || start.length !== 8 || end.length !== 8) return;
-    if (popupEditEventId) {
-      Object.assign(DATA.events.find(x=>x.id===popupEditEventId), { label, start, end, color: selectedColor, note });
-    } else {
-      DATA.events.push({ id:uid(), type:'event', label, start, end, color: selectedColor, note });
-      DATA.events.sort((a,b)=>a.start.localeCompare(b.start));
-    }
-  }
-  saveData(); closePopup(); render();
-}
-
-function deleteEntry() {
-  if (popupMode === 'stay' && popupEditStayId)
-    DATA.stays = DATA.stays.filter(s=>s.id!==popupEditStayId);
-  else if (popupMode === 'event' && popupEditEventId)
-    DATA.events = DATA.events.filter(e=>e.id!==popupEditEventId);
-  saveData(); closePopup(); render();
-}
-
-// ─── EDIT DRAWER ─────────────────────────────────────────────────────────────
-function openEditDrawer() {
-  renderDrawer();
-  document.getElementById('editOverlay').style.display = 'block';
-  document.getElementById('editDrawer').style.display = 'block';
-}
-function closeEditDrawer() {
-  document.getElementById('editOverlay').style.display = 'none';
-  document.getElementById('editDrawer').style.display = 'none';
-}
-function renderDrawer() {
-  document.getElementById('tripBody').innerHTML = DATA.stays.map(s => {
-    const past = ymdToDate(s.end) <= TODAY;
-    const dot = `<span class="color-dot" style="background:${DOT_COLORS[s.cssClass]||'#ccc'}"></span>`;
-    const startFmt = fmtYMD(s.start), endFmt = fmtYMD(s.end);
-    const labelEl   = past ? `<span style="display:flex;align-items:center;">${dot}${s.flag} ${s.label}</span>`
-                           : `<span style="display:flex;align-items:center;gap:3px;">${dot}${s.flag} <input type="text" class="wide" value="${s.label.replace(/"/g,'&quot;')}"></span>`;
-    const dateStart = past ? `<span class="readonly">${startFmt}</span>` : `<input type="text" value="${startFmt}">`;
-    const dateEnd   = past ? `<span class="readonly">${endFmt}</span>`   : `<input type="text" value="${endFmt}">`;
-    const statusEl  = past
-      ? `<span class="status-badge status-done">✓ done</span>`
-      : s.booked
-        ? `<button class="status-badge status-booked" onclick="toggleBooked('${s.id}')">✓ booked</button>`
-        : `<button class="status-badge status-tobook" onclick="toggleBooked('${s.id}')"><span style="display:inline-block;width:6px;height:6px;background:#d94040;border-radius:50%;margin-right:4px;vertical-align:middle;"></span>to book</button>`;
-    const delBtn = past ? '' : `<button class="status-badge" style="background:#f0ddd0;color:#6b2000;cursor:pointer;margin-left:3px;" onclick="deleteStayFromDrawer('${s.id}')">✕</button>`;
-    return `<tr class="${past?'is-past':''}" data-id="${s.id}">
-      <td>${labelEl}</td>
-      <td>${dateStart}</td><td>${dateEnd}</td>
-      <td style="white-space:nowrap;">${statusEl}${delBtn}</td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('eventBody').innerHTML = DATA.events.map(e => {
-    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${e.color};margin-right:5px;flex-shrink:0;"></span>`;
-    const noteVal  = (e.note||'').replace(/"/g,'&quot;');
-    const labelVal = e.label.replace(/"/g,'&quot;');
-    return `<tr data-eid="${e.id}">
-      <td><span style="display:flex;align-items:center;">${dot}<input type="text" class="wide" value="${labelVal}"></span></td>
-      <td><input type="text" value="${fmtYMD(e.start)}"></td>
-      <td><input type="text" value="${fmtYMD(e.end)}"></td>
-      <td style="white-space:nowrap;"><input type="text" class="wide" value="${noteVal}" placeholder="url or note"> <button class="status-badge" style="background:#f0ddd0;color:#6b2000;cursor:pointer;" onclick="deleteEventFromDrawer('${e.id}')">✕</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function deleteStayFromDrawer(id) {
-  DATA.stays = DATA.stays.filter(s => s.id !== id);
-  saveData();
-  render();
-  renderDrawer();
-}
-function deleteEventFromDrawer(id) {
-  DATA.events = DATA.events.filter(e => e.id !== id);
-  saveData();
-  render();
-  renderDrawer();
-}
-function toggleBooked(id) {
-  const s = DATA.stays.find(x=>x.id===id);
-  if (s) s.booked = !s.booked;
-  renderDrawer();
-  saveData();
-  render();
-}
-function saveDrawerAndClose() {
-  document.querySelectorAll('#tripBody tr[data-id]').forEach(row => {
-    const id = row.dataset.id;
-    const s = DATA.stays.find(x=>x.id===id);
-    if (!s) return;
-    const inputs = row.querySelectorAll('input[type=text]');
-    if (inputs.length === 3) {
-      const label = inputs[0].value.trim();
-      const sv = parseYMD(inputs[1].value.trim());
-      const ev = parseYMD(inputs[2].value.trim());
-      if (label) s.label = label;
-      if (/^\d{8}$/.test(sv)) s.start = sv;
-      if (/^\d{8}$/.test(ev)) s.end = ev;
-    }
-  });
-  document.querySelectorAll('#eventBody tr[data-eid]').forEach(row => {
-    const id = row.dataset.eid;
-    const e = DATA.events.find(x=>x.id===id);
-    if (!e) return;
-    const inputs = row.querySelectorAll('input[type=text]');
-    if (inputs.length >= 3) {
-      const label = inputs[0].value.trim();
-      const sv = parseYMD(inputs[1].value.trim());
-      const ev = parseYMD(inputs[2].value.trim());
-      if (label) e.label = label;
-      if (/^\d{8}$/.test(sv)) e.start = sv;
-      if (/^\d{8}$/.test(ev)) e.end = ev;
-      if (inputs[3]) e.note = inputs[3].value.trim();
-    }
-  });
-  saveData();
-  render();
-  closeEditDrawer();
-}
-
-// ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
-function exportData() {
-  const json = JSON.stringify(DATA, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'travel-planner-backup.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-function importData(evt) {
-  const file = evt.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const d = JSON.parse(e.target.result);
-      if (!d.stays || !d.events) { alert('Invalid backup file.'); return; }
-      if (!confirm('This will replace all your current trips and events. Continue?')) return;
-      DATA = d;
-      saveData();
-      render();
-    } catch { alert('Could not read file.'); }
-  };
-  reader.readAsText(file);
-  evt.target.value = '';
-}
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-render();
-</script>
+<script type="module" src="src/main.js"></script>
 </body>
 </html>
