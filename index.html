@@ -11,12 +11,11 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 /* ── HEADER ── */
 .header {
   background: #f0ead8; border-bottom: 1.5px solid #d4c4a8;
-  position: sticky; top: 0; z-index: 10;
+  padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 48px; position: sticky; top: 0; z-index: 10;
 }
-.header-row1 { display: flex; align-items: center; justify-content: space-between; padding: 8px 24px 0; gap: 12px; }
-.header-row2 { display: flex; align-items: center; justify-content: center; padding: 5px 24px 7px; gap: 7px; flex-wrap: wrap; }
 .header-title { font-size: 17px; font-weight: 700; color: #1e1408; white-space: nowrap; }
-.nav-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: center; }
+.nav-group { display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
 .nav-arrow { width: 28px; height: 28px; background: #e4dcc8; border: none; border-radius: 5px; font-size: 15px; color: #3d2b1f; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .nav-arrow:hover { background: #d4ccb8; }
 .nav-label { font-size: 12px; font-weight: 600; color: #2e2010; min-width: 80px; text-align: center; font-family: -apple-system, sans-serif; }
@@ -181,28 +180,24 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 <body>
 
 <div class="header">
-  <div class="header-row1">
-    <span class="header-title">2026 Travel</span>
-    <div class="header-actions">
-      <button class="btn btn-edit" onclick="exportData()">⬇ Export</button>
-      <button class="btn btn-edit" onclick="document.getElementById('importFile').click()">⬆ Import</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-      <button class="btn btn-edit" onclick="openEditDrawer()">✏️ Edit</button>
-      <button class="btn btn-add" onclick="openPopupNew()">＋ Add</button>
-    </div>
+  <span class="header-title">2026 Travel</span>
+  <div class="nav-group">
+    <button class="nav-arrow" onclick="shiftView(-1)">‹</button>
+    <div class="nav-label" id="navLabel"></div>
+    <button class="nav-arrow" onclick="shiftView(1)">›</button>
+    <button class="btn-today" onclick="snapToToday()">Today</button>
+    <div class="nav-divider"></div>
+    <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
+    <button class="mcbtn" data-n="6" onclick="setViewMonths(6)">6</button>
+    <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
+    <button class="mcbtn active" data-n="12" onclick="setViewMonths(12)">Year</button>
   </div>
-  <div class="header-row2">
-    <div class="nav-group">
-      <button class="nav-arrow" onclick="shiftView(-1)">‹</button>
-      <div class="nav-label" id="navLabel"></div>
-      <button class="nav-arrow" onclick="shiftView(1)">›</button>
-      <button class="btn-today" onclick="snapToToday()">Today</button>
-      <div class="nav-divider"></div>
-      <button class="mcbtn" data-n="3" onclick="setViewMonths(3)">3</button>
-      <button class="mcbtn" data-n="6" onclick="setViewMonths(6)">6</button>
-      <button class="mcbtn" data-n="9" onclick="setViewMonths(9)">9</button>
-      <button class="mcbtn active" data-n="12" onclick="setViewMonths(12)">Year</button>
-    </div>
+  <div class="header-actions">
+    <button class="btn btn-edit" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-edit" onclick="document.getElementById('importFile').click()">⬆ Import</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-edit" onclick="openEditDrawer()">✏️ Edit</button>
+    <button class="btn btn-add" onclick="openPopupNew()">＋ Add</button>
   </div>
 </div>
 
