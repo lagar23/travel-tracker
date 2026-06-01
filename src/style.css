@@ -174,3 +174,33 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 .status-tobook { background: #f0ddd0; color: #6b2000; }
 .save-btn { margin-top: 14px; background: #3d2b1f; color: #f5efe6; font-size: 12px; border: none; border-radius: 6px; padding: 10px 16px; cursor: pointer; font-family: inherit; width: 100%; }
 .save-btn:hover { background: #5a4030; }
+
+/* Gmail drawer rows */
+.gmail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e0d8c4;
+  font-family: -apple-system, sans-serif;
+}
+.gmail-row:last-child { border-bottom: none; }
+.gmail-row-body { flex: 1; min-width: 0; }
+.gmail-summary { font-size: 11px; font-weight: 700; color: #2e2010; margin-bottom: 2px; }
+.gmail-match   { font-size: 10px; color: #9a8070; margin-bottom: 3px; }
+.gmail-email-link { font-size: 9px; color: #6a8fc0; text-decoration: none; }
+.gmail-email-link:hover { text-decoration: underline; }
+.gmail-row-actions { display: flex; gap: 5px; flex-shrink: 0; align-items: flex-start; padding-top: 1px; }
+.gmail-btn {
+  font-size: 9px; padding: 3px 8px; border: none; border-radius: 4px; cursor: pointer;
+}
+.gmail-accept  { background: #d4e8d0; }
+.gmail-edit    { background: #e4dcc8; }
+.gmail-dismiss { background: #f0ddd0; }
+.gmail-create  { background: #2e2010; color: #f5efe6; }
+.gmail-bar-rescan {
+  cursor: pointer;
+  text-decoration: underline;
+  color: inherit;
+}
+.gmail-bar-rescan:hover { opacity: 0.7; }
