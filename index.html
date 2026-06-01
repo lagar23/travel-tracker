@@ -91,19 +91,12 @@
       </div>
       <div id="stayPanelInfo">
         <div class="field"><label>Country</label>
-          <select id="pCountry">
-            <option value="Spain|🇪🇸">🇪🇸 Spain</option>
-            <option value="Ireland|🇮🇪">🇮🇪 Ireland</option>
-            <option value="Thailand|🇹🇭">🇹🇭 Thailand</option>
-            <option value="Portugal|🇵🇹">🇵🇹 Portugal</option>
-            <option value="Italy|🇮🇹">🇮🇹 Italy</option>
-            <option value="Kazakhstan|🇰🇿">🇰🇿 Kazakhstan</option>
-            <option value="UK|🇬🇧">🇬🇧 UK</option>
-            <option value="USA|🇺🇸">🇺🇸 USA</option>
-            <option value="Canada|🇨🇦">🇨🇦 Canada</option>
-          </select>
+          <select id="pCountry"><!-- populated by editor.js --></select>
         </div>
         <div class="field"><label>Location</label><input type="text" id="pLabel" placeholder="e.g. Villa, Megan's…"></div>
+        <div class="field"><label>Colour</label>
+          <div class="color-row" id="stayColorSwatches"></div>
+        </div>
         <div class="field-row">
           <div class="field"><label>Start</label><input type="text" id="pStart" placeholder="YYYY/MM/DD"></div>
           <div class="field"><label>End</label><input type="text" id="pEnd" placeholder="YYYY/MM/DD"></div>

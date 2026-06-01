@@ -18,6 +18,7 @@ function tripToApp(row) {
     country:  row.country,
     flag:     row.flag,
     cssClass: row.css_class,
+    color:    row.color || null,
     start:    fromIso(row.start_date),
     end:      fromIso(row.end_date),
     note:     row.note,
@@ -27,7 +28,6 @@ function tripToApp(row) {
     flight_in:  row.flight_in,
     flight_out: row.flight_out,
     accom:    row.accom,
-    // derive booked for backwards compat with calendar render
     booked: isTripBooked({ flight_in: row.flight_in, flight_out: row.flight_out, accom: row.accom }),
   };
 }
@@ -67,6 +67,7 @@ export async function saveTrip(trip) {
     country:    trip.country,
     flag:       trip.flag,
     css_class:  trip.cssClass,
+    color:      trip.color || null,
     start_date: toIso(trip.start),
     end_date:   toIso(trip.end),
     note:       trip.note || '',

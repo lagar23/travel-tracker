@@ -100,7 +100,8 @@ export function renderCalendar(stays, events, viewYear, viewMonth, viewMonths, o
         const past = date < TODAY;
         const isToday = date.getTime() === TODAY.getTime();
         const t = dayMap[key];
-        const cls = 'd' + (past?' past':'') + (isToday?' today':'') + ' ' + (t ? t.cssClass : 'notrip');
+        const customColor = t?.color;
+        const cls = 'd' + (past?' past':'') + (isToday?' today':'') + (customColor ? '' : ' ' + (t ? t.cssClass : 'notrip'));
         const needsPin = t && t.isFirst && !t.booked;
         const flag = (t && t.isFirst && showFlag[key]) ? `${t.flag} ` : '';
         const locStr = (t && t.isFirst) ? `${flag}${t.label}` : '';
@@ -109,7 +110,8 @@ export function renderCalendar(stays, events, viewYear, viewMonth, viewMonths, o
           const isUrl = t.note.startsWith('http://') || t.note.startsWith('https://');
           inner += `<span class="d-note">${isUrl ? '🔗' : t.note}</span>`;
         }
-        html += `<div class="${cls}" data-key="${key}">${inner}</div>`;
+        const inlineStyle = customColor ? ` style="background:${customColor};"` : '';
+        html += `<div class="${cls}" data-key="${key}"${inlineStyle}>${inner}</div>`;
       });
 
       weekEvents.forEach(ev => {

@@ -1,15 +1,45 @@
-import { TODAY, MONTHS, COUNTRY_CSS, fmtYMD, parseYMD } from './utils.js';
+import { TODAY, MONTHS, COUNTRY_CSS, COUNTRY_FLAGS, fmtYMD, parseYMD } from './utils.js';
 
 let popupMode = 'stay';
 let popupEditStayId  = null;
 let popupEditEventId = null;
 let selectedColor = '#9b6b8a';
+let selectedStayColor = null; // null = use default country colour
 let _onSave = null;
 let _onDelete = null;
+
+const STAY_PALETTE = [
+  '#bccde2','#b8dfc2','#e8cda4','#cac6de','#ead8a4',
+  '#d6bca4','#f0cadc','#c8e0d0','#e8d0b8','#d0c8e8',
+];
 
 export function initEditor(onSave, onDelete) {
   _onSave   = onSave;
   _onDelete = onDelete;
+
+  // Populate country select dynamically from full world list
+  const sel = document.getElementById('pCountry');
+  sel.innerHTML = Object.entries(COUNTRY_FLAGS)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, flag]) => `<option value="${name}|${flag}">${flag} ${name}</option>`)
+    .join('');
+  sel.value = 'Spain|🇪🇸';
+
+  // Build stay colour swatches
+  const stayColorRow = document.getElementById('stayColorSwatches');
+  stayColorRow.innerHTML = STAY_PALETTE.map(c =>
+    `<div class="swatch stay-swatch" style="background:${c};" data-color="${c}"></div>`
+  ).join('') +
+  `<div class="swatch stay-swatch" data-color="__clear__" title="Default (country colour)" style="background: linear-gradient(135deg,#ddd 50%,#fff 50%);"></div>` +
+  `<input type="color" id="stayCustomColor" style="width:18px;height:18px;border-radius:50%;border:none;padding:0;cursor:pointer;background:none;" value="#b8dfc2">`;
+
+  stayColorRow.querySelectorAll('.stay-swatch').forEach(sw => {
+    sw.addEventListener('click', () => pickStayColor(sw));
+  });
+  document.getElementById('stayCustomColor').addEventListener('input', e => {
+    selectedStayColor = e.target.value;
+    stayColorRow.querySelectorAll('.stay-swatch').forEach(s => s.classList.remove('picked'));
+  });
 
   document.getElementById('popupOverlay').addEventListener('click', closePopup);
   document.getElementById('btnPopupClose').addEventListener('click', closePopup);
@@ -22,7 +52,7 @@ export function initEditor(onSave, onDelete) {
     document.getElementById('stayTab' + t).addEventListener('click', () => switchStayTab(t.toLowerCase()));
   });
 
-  document.querySelectorAll('.swatch').forEach(sw => {
+  document.querySelectorAll('.swatch:not(.stay-swatch)').forEach(sw => {
     sw.addEventListener('click', () => pickColor(sw));
   });
   document.getElementById('customColor').addEventListener('input', e => pickCustomColor(e.target.value));
@@ -92,6 +122,9 @@ function openPopupEditStay(evt, s, key) {
   document.getElementById('pAccomRef').value     = s.accomRef     || (s.accom?.booking_ref || '');
   updateAccomLink(s.accomRef || s.accom?.booking_ref || '');
   document.getElementById('pTripNotes').value = s.tripNotes || '';
+  // Load stay colour
+  selectedStayColor = s.color || null;
+  syncStayColorUI();
   switchStayTab('info');
   positionAndShowPopup(evt);
 }
@@ -119,6 +152,8 @@ function clearStayFields() {
   document.getElementById('pBooked').checked = false;
   document.getElementById('pCountry').value  = 'Spain|🇪🇸';
   document.getElementById('pAccomLink').style.display = 'none';
+  selectedStayColor = null;
+  syncStayColorUI();
   switchStayTab('info');
 }
 
@@ -174,13 +209,36 @@ function updateAccomLink(val) {
 
 function pickColor(el) {
   selectedColor = el.dataset.color;
-  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('picked'));
+  document.querySelectorAll('.swatch:not(.stay-swatch)').forEach(s => s.classList.remove('picked'));
   el.classList.add('picked');
   document.getElementById('customColor').value = selectedColor;
 }
 function pickCustomColor(val) {
   selectedColor = val;
-  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('picked'));
+  document.querySelectorAll('.swatch:not(.stay-swatch)').forEach(s => s.classList.remove('picked'));
+}
+
+function pickStayColor(el) {
+  const val = el.dataset.color;
+  selectedStayColor = val === '__clear__' ? null : val;
+  syncStayColorUI();
+}
+
+function syncStayColorUI() {
+  const row = document.getElementById('stayColorSwatches');
+  if (!row) return;
+  row.querySelectorAll('.stay-swatch').forEach(s => s.classList.remove('picked'));
+  if (selectedStayColor) {
+    const match = row.querySelector(`.stay-swatch[data-color="${selectedStayColor}"]`);
+    if (match) {
+      match.classList.add('picked');
+    } else {
+      document.getElementById('stayCustomColor').value = selectedStayColor;
+    }
+  } else {
+    const clearBtn = row.querySelector('.stay-swatch[data-color="__clear__"]');
+    if (clearBtn) clearBtn.classList.add('picked');
+  }
 }
 function updateEventNoteLink(val) {
   const link = document.getElementById('pEventNoteLink');
@@ -210,7 +268,7 @@ function saveEntry() {
     if (start.length !== 8 || end.length !== 8) return;
     const trip = {
       id: popupEditStayId || undefined,
-      type: 'stay', country, flag, label, cssClass, start, end, booked, note,
+      type: 'stay', country, flag, label, cssClass, color: selectedStayColor, start, end, booked, note,
       source: 'manual',
       flight_in:  flightIn  ? { number: flightIn,  booking_ref: flightInRef,  confirmed: null, source: 'manual' } : null,
       flight_out: flightOut ? { number: flightOut, booking_ref: flightOutRef, confirmed: null, source: 'manual' } : null,
