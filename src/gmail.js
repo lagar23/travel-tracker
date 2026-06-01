@@ -109,11 +109,11 @@ function extractRoute(body) {
   if (arrow && validRoute(arrow[1], arrow[2])) {
     return { origin: airportCity(arrow[1]), dest: airportCity(arrow[2]), originIata: arrow[1], destIata: arrow[2] };
   }
-  // "from Dublin to Madrid"
-  const fromTo = body.match(/\bfrom\s+([A-Za-z][A-Za-z ]{1,20}?)\s+to\s+([A-Za-z][A-Za-z ]{1,20}?)(?:\s*[,(]|\s*$)/i);
+  // "from Dublin to Madrid" — require Title Case (not ALL CAPS like "HELLO LAURA")
+  const fromTo = body.match(/\bfrom\s+([A-Z][a-z][A-Za-z ]{1,20}?)\s+to\s+([A-Z][a-z][A-Za-z ]{1,20}?)(?:\s*[,(]|\s*$)/);
   if (fromTo) {
     const o = fromTo[1].trim(), d = fromTo[2].trim();
-    if (o.length >= 3 && d.length >= 3 && /^[A-Z]/.test(o) && /^[A-Z]/.test(d)) {
+    if (o.length >= 3 && d.length >= 3) {
       return { origin: o, dest: d, originIata: null, destIata: null };
     }
   }

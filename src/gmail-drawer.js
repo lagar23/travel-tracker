@@ -34,7 +34,7 @@ function summaryLine(booking) {
 
 function matchLine(booking, stay) {
   if (!stay) return `<span style="color:#c06040;">No match found</span>`;
-  return `<span style="color:#2e7040;">→ ${safe(stay.flag)} ${safe(stay.country)} ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}</span>`;
+  return `<span style="color:#2e7040;">→ ${safe(stay.flag)} ${safe(stay.label)}, ${safe(stay.country)} ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}</span>`;
 }
 
 function renderRow(item, index, isMatched) {
