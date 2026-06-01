@@ -111,7 +111,8 @@ function openPopupEditStay(evt, s, key) {
   document.getElementById('pStart').value        = fmtYMD(s.start);
   document.getElementById('pEnd').value          = fmtYMD(s.end);
   document.getElementById('pNote').value         = s.note || '';
-  document.getElementById('pBooked').checked     = s.booked;
+  document.getElementById('pBookedTransport').checked = s.booked_transportation ?? false;
+  document.getElementById('pBookedStay').checked      = s.booked_stay ?? false;
   // Legacy flat fields
   document.getElementById('pFlightIn').value     = s.flightIn     || (s.flight_in?.number  || '');
   document.getElementById('pFlightInRef').value  = s.flightInRef  || (s.flight_in?.booking_ref  || '');
@@ -149,7 +150,8 @@ function clearStayFields() {
   ['pLabel','pStart','pEnd','pNote','pFlightIn','pFlightInRef','pFlightOut','pFlightOutRef','pAccomName','pAccomAddr','pAccomRef','pTripNotes'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  document.getElementById('pBooked').checked = false;
+  document.getElementById('pBookedTransport').checked = false;
+  document.getElementById('pBookedStay').checked = false;
   document.getElementById('pCountry').value  = 'Spain|🇪🇸';
   document.getElementById('pAccomLink').style.display = 'none';
   selectedStayColor = null;
@@ -255,7 +257,8 @@ function saveEntry() {
     const start    = parseYMD(document.getElementById('pStart').value);
     const end      = parseYMD(document.getElementById('pEnd').value);
     const note     = document.getElementById('pNote').value.trim();
-    const booked   = document.getElementById('pBooked').checked;
+    const bookedTransport = document.getElementById('pBookedTransport').checked;
+    const bookedStay      = document.getElementById('pBookedStay').checked;
     const cssClass = COUNTRY_CSS[country] || 'c-villa';
     const flightIn     = document.getElementById('pFlightIn').value.trim();
     const flightInRef  = document.getElementById('pFlightInRef').value.trim();
@@ -271,7 +274,11 @@ function saveEntry() {
     }
     const trip = {
       id: popupEditStayId || undefined,
-      type: 'stay', country, flag, label, cssClass, color: selectedStayColor, start, end, booked, note,
+      type: 'stay', country, flag, label, cssClass, color: selectedStayColor, start, end,
+      booked_transportation: bookedTransport,
+      booked_stay: bookedStay,
+      booked: bookedTransport && bookedStay,
+      note,
       source: 'manual',
       flight_in:  flightIn  ? { number: flightIn,  booking_ref: flightInRef,  confirmed: null, source: 'manual' } : null,
       flight_out: flightOut ? { number: flightOut, booking_ref: flightOutRef, confirmed: null, source: 'manual' } : null,
@@ -357,6 +364,15 @@ function renderDrawer(stays, events) {
   eventBody.querySelectorAll('[data-deleteeid]').forEach(btn => {
     btn.addEventListener('click', () => _onDelete('event', btn.dataset.deleteeid));
   });
+}
+
+export function openGmailPreFill(suggestion, stay) {
+  openPopupEditStay(null, {
+    ...stay,
+    flight_in:  suggestion.type === 'flight' && suggestion.inbound  ? { number: `${suggestion.inbound.carrier} ${suggestion.inbound.ref}`,  booking_ref: suggestion.ref, confirmed: null, source: 'gmail' } : stay.flight_in,
+    flight_out: suggestion.type === 'flight' && suggestion.outbound ? { number: `${suggestion.outbound.carrier} ${suggestion.outbound.ref}`, booking_ref: suggestion.ref, confirmed: null, source: 'gmail' } : stay.flight_out,
+    accom: suggestion.type === 'accommodation' ? { name: suggestion.inbound?.destination || '', address: '', booking_ref: suggestion.ref, booked: null, source: 'gmail' } : stay.accom,
+  }, stay.start);
 }
 
 function saveDrawerAndClose() {
