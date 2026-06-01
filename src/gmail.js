@@ -496,42 +496,47 @@ function parseMessage(msg) {
   return null;
 }
 
+// Returns { primary, secondary } where secondary is a second stay match for connecting flights.
+// secondary is only set for flights where origin and destination map to different stays.
 function matchBooking(booking, stays) {
-  if (!booking.dateStart) return null;
+  if (!booking.dateStart) return { primary: null, secondary: null };
   const ds = booking.dateStart;
   const candidates = stays.filter(s => ds >= s.start && ds <= s.end);
 
   if (candidates.length === 0) {
-    // No date overlap — try the stay that starts closest after this date
     const next = stays
       .filter(s => s.start > ds)
       .sort((a, b) => a.start.localeCompare(b.start))[0];
-    return next ?? null;
+    return { primary: next ?? null, secondary: null };
   }
 
-  if (candidates.length === 1) return candidates[0];
+  if (candidates.length === 1) return { primary: candidates[0], secondary: null };
 
-  // Multiple candidates — prefer destination country match first, then origin country
   const destCountry   = booking.country;
   const originCountry = booking.originCountry;
-  const destMatch = candidates.find(s => s.country === destCountry);
-  if (destMatch) return destMatch;
+  const destMatch   = candidates.find(s => s.country === destCountry);
   const originMatch = candidates.find(s => s.country === originCountry);
-  if (originMatch) return originMatch;
 
-  // For flights: if the booking date is the last day of a stay, it's likely
-  // the departure flight — prefer the next stay instead
+  // Connecting flight: origin and destination each match a different stay
+  if (booking.type === 'flight' && destMatch && originMatch && destMatch !== originMatch) {
+    return { primary: destMatch, secondary: originMatch };
+  }
+
+  if (destMatch) return { primary: destMatch, secondary: null };
+  if (originMatch) return { primary: originMatch, secondary: null };
+
+  // Flight on last day of a stay — likely departure, suggest the next stay
   if (booking.type === 'flight') {
     const departureStay = candidates.find(s => s.end === ds);
     if (departureStay) {
       const nextStay = stays
         .filter(s => s.start >= ds && s !== departureStay)
         .sort((a, b) => a.start.localeCompare(b.start))[0];
-      if (nextStay) return nextStay;
+      if (nextStay) return { primary: nextStay, secondary: null };
     }
   }
 
-  return candidates[0];
+  return { primary: candidates[0], secondary: null };
 }
 
 export async function scanGmail(accessToken, stays) {
@@ -553,9 +558,10 @@ export async function scanGmail(accessToken, stays) {
   const unmatched = [];
 
   for (const booking of bookings) {
-    const stay = matchBooking(booking, stays);
-    if (stay) {
-      matched.push({ booking, stay });
+    const { primary, secondary } = matchBooking(booking, stays);
+    if (primary) {
+      matched.push({ booking, stay: primary });
+      if (secondary) matched.push({ booking, stay: secondary });
     } else {
       unmatched.push(booking);
     }

@@ -301,10 +301,13 @@ async function saveEntry() {
 }
 
 function deleteEntry() {
-  if (popupMode === 'stay' && popupEditStayId)
+  if (popupMode === 'stay' && popupEditStayId) {
+    closePopup();
     _onDelete('stay', popupEditStayId);
-  else if (popupMode === 'event' && popupEditEventId)
+  } else if (popupMode === 'event' && popupEditEventId) {
+    closePopup();
     _onDelete('event', popupEditEventId);
+  }
 }
 
 export function openEditDrawer(stays, events) {
