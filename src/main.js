@@ -243,43 +243,6 @@ function setViewMonths(n) {
   render();
 }
 
-// ── export / import ───────────────────────────────────────────────────────────
-function exportData() {
-  const json = JSON.stringify({ stays, events }, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = 'travel-planner-backup.json'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-async function importData(evt) {
-  const file = evt.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    (async () => {
-      try {
-        const d = JSON.parse(e.target.result);
-        if (!d.stays || !d.events) { alert('Invalid backup file.'); return; }
-        if (!confirm(`Import ${d.stays.length} trips and ${d.events.length} events? They will be added to your account.`)) return;
-        const errors = [];
-        for (const s of d.stays) {
-          try { await saveTrip({ ...s, id: undefined }); }
-          catch (err) { errors.push(`Trip "${s.label}": ${err.message}`); }
-        }
-        for (const ev of d.events) {
-          try { await saveEvent({ ...ev, id: undefined }); }
-          catch (err) { errors.push(`Event "${ev.label}": ${err.message}`); }
-        }
-        if (errors.length) alert('Some items failed:\n' + errors.join('\n'));
-        await loadAndRender();
-      } catch (err) { alert('Could not read file: ' + err.message); }
-    })();
-  };
-  reader.readAsText(file);
-  evt.target.value = '';
-}
-
 // ── auth ──────────────────────────────────────────────────────────────────────
 function showApp()      { document.getElementById('app').style.display = '';     document.getElementById('authGate').style.display = 'none'; }
 function showAuthGate() { document.getElementById('app').style.display = 'none'; document.getElementById('authGate').style.display = 'flex'; }
@@ -293,9 +256,6 @@ async function boot() {
   document.querySelectorAll('.mcbtn').forEach(b => {
     b.addEventListener('click', () => setViewMonths(parseInt(b.dataset.n)));
   });
-  document.getElementById('btnExport').addEventListener('click', exportData);
-  document.getElementById('btnImportTrigger').addEventListener('click', () => document.getElementById('importFile').click());
-  document.getElementById('importFile').addEventListener('change', importData);
   document.getElementById('btnSignOut').addEventListener('click', async () => { try { await signOut(); } catch (e) { console.error('Sign out error:', e); } showAuthGate(); });
   document.getElementById('btnEditDrawer').addEventListener('click', () => openEditDrawer(stays, events));
   document.getElementById('btnAdd').addEventListener('click', () => openPopupNew(null, null));
