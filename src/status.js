@@ -30,42 +30,39 @@ function timeSince() {
 function renderGmailBar() {
   const bar = document.getElementById('gmailBar');
   if (!bar) return;
-  if (_gmailState === 'hidden') { bar.style.display = 'none'; return; }
+  bar.innerHTML = '';
+  bar.onclick = null;
 
-  bar.style.display = '';
-  const rescanBtn = `<span class="gmail-bar-rescan" id="gmailBarRescan">🔄 Rescan</span>`;
+  if (_gmailState === 'hidden') { bar.style.display = 'none'; return; }
+  bar.style.display = 'inline-flex';
+
+  const rescanBtn = `<span class="gmail-bar-rescan" id="gmailBarRescan">Rescan</span>`;
 
   if (_gmailState === 'disconnected') {
-    bar.style.cssText = 'background:#f5efe0;border-bottom:1px solid #d4c4a8;padding:0 24px;height:30px;display:flex;align-items:center;gap:10px;font-size:10px;font-family:-apple-system,sans-serif;cursor:pointer;';
-    bar.innerHTML = `<span style="color:#6a5030;">📬 Connect Gmail to auto-import bookings</span>
-      <button id="gmailConnectBtn" style="font-size:9px;padding:2px 8px;background:#2e2010;color:#f5efe6;border:none;border-radius:4px;cursor:pointer;">Connect</button>
-      <span id="gmailDismissConnect" style="margin-left:auto;color:#b0a090;font-size:9px;cursor:pointer;">Not now</span>`;
+    bar.innerHTML = `<span style="color:#6a5030;">📬 Connect Gmail</span>
+      <button id="gmailConnectBtn" style="font-size:9px;padding:1px 6px;background:#2e2010;color:#f5efe6;border:none;border-radius:4px;cursor:pointer;">Connect</button>
+      <span id="gmailDismissConnect" style="color:#b0a090;font-size:9px;cursor:pointer;text-decoration:underline;">Not now</span>`;
     document.getElementById('gmailConnectBtn')?.addEventListener('click', () => _onConnect?.());
     document.getElementById('gmailDismissConnect')?.addEventListener('click', () => { _gmailState = 'hidden'; renderGmailBar(); _onDismissConnect?.(); });
     return;
   }
 
   if (_gmailState === 'scanning') {
-    bar.style.cssText = 'background:#f0ead8;border-bottom:1px solid #d4c4a8;padding:0 24px;height:30px;display:flex;align-items:center;gap:10px;font-size:10px;color:#9a8070;font-family:-apple-system,sans-serif;';
-    bar.innerHTML = `<span class="gmail-dot-pulse" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#c0a030;"></span>Scanning Gmail for bookings…`;
+    bar.innerHTML = `<span class="gmail-dot-pulse" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#c0a030;flex-shrink:0;"></span><span>Scanning Gmail…</span>`;
     return;
   }
 
   if (_gmailState === 'found') {
-    bar.style.cssText = 'background:#f0f8f0;border-bottom:1px solid #b8d8b8;padding:0 24px;height:30px;display:flex;align-items:center;gap:10px;font-size:10px;font-family:-apple-system,sans-serif;cursor:pointer;';
-    bar.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4a9060;"></span>
-      <span style="color:#1a3020;font-weight:600;">${_suggestionCount} booking suggestion${_suggestionCount !== 1 ? 's' : ''} found</span>
-      <span style="color:#6a9070;">— click to review</span>
-      <span style="margin-left:auto;color:#9a8070;font-size:10px;">Last scanned ${timeSince()} · ${rescanBtn}</span>`;
-    bar.onclick = (e) => { if (!e.target.closest('#gmailBarRescan')) _onBarClick?.(); };
+    bar.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#c04030;flex-shrink:0;"></span>
+      <span style="color:#8b1a0a;font-weight:700;cursor:pointer;" id="gmailFoundLabel">${_suggestionCount} booking suggestion${_suggestionCount !== 1 ? 's' : ''} — click to review</span>
+      <span style="color:#9a8070;">· ${timeSince()} · ${rescanBtn}</span>`;
+    document.getElementById('gmailFoundLabel')?.addEventListener('click', () => _onBarClick?.());
     document.getElementById('gmailBarRescan')?.addEventListener('click', (e) => { e.stopPropagation(); _onRescan?.(); });
     return;
   }
 
   if (_gmailState === 'uptodate') {
-    bar.style.cssText = 'background:#ece4d0;border-bottom:1px solid #d4c4a8;padding:0 24px;height:30px;display:flex;align-items:center;gap:10px;font-size:10px;color:#9a8070;font-family:-apple-system,sans-serif;';
-    bar.innerHTML = `<span>✓ Gmail up to date</span>
-      <span style="margin-left:auto;font-size:10px;">Last scanned ${timeSince()} · ${rescanBtn}</span>`;
+    bar.innerHTML = `<span style="color:#9a8070;">✓ Gmail scanned · ${timeSince()} · ${rescanBtn}</span>`;
     document.getElementById('gmailBarRescan')?.addEventListener('click', () => _onRescan?.());
   }
 }
@@ -80,5 +77,6 @@ export function renderStatus(stays, events) {
   document.getElementById('statusLine').innerHTML =
     `<span>Today: ${todayStr}</span>` +
     `<span class="unbooked">● ${unbooked} still to book</span>` +
-    (nextUnbooked ? `<span>Next unbooked: ${nextUnbooked.flag} ${nextUnbooked.label} (${fmtYMD(nextUnbooked.start)})</span>` : '');
+    (nextUnbooked ? `<span>Next unbooked: ${nextUnbooked.flag} ${nextUnbooked.label} (${fmtYMD(nextUnbooked.start)})</span>` : '') +
+    `<span id="gmailBar" style="margin-left:auto;display:none;align-items:center;gap:6px;font-size:10px;font-family:-apple-system,sans-serif;"></span>`;
 }

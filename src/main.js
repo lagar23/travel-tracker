@@ -4,7 +4,7 @@ import { buildDayMap, TODAY } from './utils.js';
 import { renderNav, renderCalendar, renderSummary, shiftSummaryYear } from './calendar.js';
 import { renderStatus, setGmailBarState } from './status.js';
 import { initEditor, handleDayClick, handleEventBarClick, openPopupNew, closePopup, openEditDrawer, openGmailPreFill } from './editor.js';
-import { scanGmail, airportCountry } from './gmail.js';
+import { scanGmail, airportCountry, LAST_ID_KEY } from './gmail.js';
 import { openGmailDrawer, closeGmailDrawer, updateGmailDrawerStays } from './gmail-drawer.js';
 
 // ── view state ────────────────────────────────────────────────────────────────
@@ -71,7 +71,8 @@ async function onDelete(type, id) {
   await loadAndRender();
 }
 
-async function runGmailScan() {
+async function runGmailScan(fullRescan = false) {
+  if (fullRescan) localStorage.removeItem(LAST_ID_KEY);
   setGmailBarState('scanning');
   try {
     const token = await getGmailAccessToken();
@@ -88,10 +89,10 @@ async function runGmailScan() {
       setGmailBarState('found', {
         count,
         onBarClick: openDrawer,
-        onRescan: runGmailScan,
+        onRescan: () => runGmailScan(true),
       });
     } else {
-      setGmailBarState('uptodate', { onRescan: runGmailScan });
+      setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) });
     }
   } catch (err) {
     if (err.code === 'NO_GMAIL_SCOPE') {
@@ -101,7 +102,7 @@ async function runGmailScan() {
       });
     } else {
       console.error('Gmail scan error:', err);
-      setGmailBarState('uptodate', { onRescan: runGmailScan });
+      setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) });
     }
   }
 }
@@ -119,8 +120,8 @@ function openDrawer() {
         suggestions.matched = suggestions.matched.filter(m => m.booking !== booking);
         updateGmailDrawerStays(stays, suggestions.matched);
         const count = suggestions.matched.length + suggestions.unmatched.length;
-        if (count > 0) setGmailBarState('found', { count, onBarClick: openDrawer, onRescan: runGmailScan });
-        else { setGmailBarState('uptodate', { onRescan: runGmailScan }); closeGmailDrawer(); }
+        if (count > 0) setGmailBarState('found', { count, onBarClick: openDrawer, onRescan: () => runGmailScan(true) });
+        else { setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) }); closeGmailDrawer(); }
       } else if (action === 'edit') {
         closeGmailDrawer();
         openGmailPreFill(booking, stay);
@@ -131,7 +132,7 @@ function openDrawer() {
     },
     () => {
       const count = suggestions.matched.length + suggestions.unmatched.length;
-      if (count === 0) { setGmailBarState('uptodate', { onRescan: runGmailScan }); }
+      if (count === 0) { setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) }); }
     },
   );
 }

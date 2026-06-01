@@ -16,15 +16,22 @@ const GMAIL_SEARCH = [
   'after:2024/01/01',
 ].join(' ');
 
-const LAST_ID_KEY = 'gmailLastMessageId';
+export const LAST_ID_KEY = 'gmailLastMessageId';
 
-async function fetchMessageIds(token, afterId) {
-  const q = afterId ? `${GMAIL_SEARCH} after:${afterId}` : GMAIL_SEARCH;
-  const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(q)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw Object.assign(new Error('Gmail fetch failed'), { status: res.status });
-  const data = await res.json();
-  return data.messages?.map(m => m.id) ?? [];
+async function fetchMessageIds(token, afterDate) {
+  const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;
+  const base = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${encodeURIComponent(q)}`;
+  const ids = [];
+  let pageToken = null;
+  do {
+    const url = pageToken ? `${base}&pageToken=${pageToken}` : base;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw Object.assign(new Error('Gmail fetch failed'), { status: res.status });
+    const data = await res.json();
+    if (data.messages) ids.push(...data.messages.map(m => m.id));
+    pageToken = data.nextPageToken ?? null;
+  } while (pageToken);
+  return ids;
 }
 
 async function fetchMessage(token, id) {
