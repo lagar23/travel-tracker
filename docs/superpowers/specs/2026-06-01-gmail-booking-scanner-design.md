@@ -108,6 +108,7 @@ Per-sender parsers extract:
   ref: string,
   subject: string,
   sender: string,
+  gmailUrl: string,  // https://mail.google.com/mail/u/0/#inbox/{messageId}
 }
 ```
 
@@ -141,6 +142,7 @@ Each row shows:
 - Actions:
   - **Matched:** Accept / Edit / Dismiss
   - **Unmatched:** Create Stay / Dismiss
+- "View email" link on every row → opens `gmailUrl` in a new tab
 
 ### "Create Stay" flow
 
