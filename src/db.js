@@ -28,7 +28,7 @@ function tripToApp(row) {
     flight_in:  row.flight_in,
     flight_out: row.flight_out,
     accom:    row.accom,
-    booked: isTripBooked({ flight_in: row.flight_in, flight_out: row.flight_out, accom: row.accom }),
+    booked: isTripBooked({ booked: row.booked, flight_in: row.flight_in, flight_out: row.flight_out, accom: row.accom }),
   };
 }
 
@@ -68,6 +68,7 @@ export async function saveTrip(trip) {
     flag:       trip.flag,
     css_class:  trip.cssClass,
     color:      trip.color || null,
+    booked:     trip.booked || false,
     start_date: toIso(trip.start),
     end_date:   toIso(trip.end),
     note:       trip.note || '',

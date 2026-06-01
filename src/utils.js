@@ -115,10 +115,10 @@ export function buildDayMap(stays, events) {
   return { dayMap, eventMap };
 }
 
-// Derive whether a trip is booked from its booking refs / confirmed overrides
+// Derive whether a trip is booked
 export function isTripBooked(trip) {
   function legBooked(leg) {
-    if (!leg) return true; // no leg = not applicable = doesn't block
+    if (!leg) return true;
     if (leg.confirmed !== null && leg.confirmed !== undefined) return leg.confirmed;
     return !!leg.booking_ref;
   }
@@ -127,14 +127,9 @@ export function isTripBooked(trip) {
     if (accom.booked !== null && accom.booked !== undefined) return accom.booked;
     return !!accom.booking_ref;
   }
-  // accom.booked override (manual toggle with no details entered)
-  if (trip.accom && trip.accom.booked !== null && trip.accom.booked !== undefined
-      && !trip.accom.name && !trip.accom.booking_ref) {
-    return trip.accom.booked && legBooked(trip.flight_in) && legBooked(trip.flight_out);
-  }
-  // Legacy flat booked flag when no structured data exists
-  if (trip.booked !== undefined && !trip.flight_in && !trip.flight_out && !trip.accom) {
-    return trip.booked;
+  // If no structured booking data, use the explicit booked flag
+  if (!trip.flight_in && !trip.flight_out && !trip.accom) {
+    return !!trip.booked;
   }
   return legBooked(trip.flight_in) && legBooked(trip.flight_out) && accomBooked(trip.accom);
 }

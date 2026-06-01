@@ -1,2 +1,3 @@
--- Run this in the Supabase SQL editor to add custom colour support for stays
+-- Migrations applied via Supabase Management API
 ALTER TABLE trips ADD COLUMN IF NOT EXISTS color TEXT;
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS booked BOOLEAN NOT NULL DEFAULT false;

@@ -265,7 +265,10 @@ function saveEntry() {
     const accomAddr    = document.getElementById('pAccomAddr').value.trim();
     const accomRef     = document.getElementById('pAccomRef').value.trim();
     const tripNotes    = document.getElementById('pTripNotes').value.trim();
-    if (start.length !== 8 || end.length !== 8) return;
+    if (start.length !== 8 || end.length !== 8) {
+      alert('Please enter valid start and end dates.');
+      return;
+    }
     const trip = {
       id: popupEditStayId || undefined,
       type: 'stay', country, flag, label, cssClass, color: selectedStayColor, start, end, booked, note,
@@ -281,7 +284,10 @@ function saveEntry() {
     const start = parseYMD(document.getElementById('pEventStart').value);
     const end   = parseYMD(document.getElementById('pEventEnd').value);
     const note  = document.getElementById('pEventNote').value.trim();
-    if (!label || start.length !== 8 || end.length !== 8) return;
+    if (!label || start.length !== 8 || end.length !== 8) {
+      alert('Please enter a name and valid start/end dates.');
+      return;
+    }
     const event = { id: popupEditEventId || undefined, type: 'event', label, start, end, color: selectedColor, note, source: 'manual' };
     _onSave('event', event);
   }
