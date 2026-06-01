@@ -105,7 +105,7 @@ export function renderCalendar(stays, events, viewYear, viewMonth, viewMonths, o
         const needsPin = t && t.isFirst && !t.booked;
         const flag = (t && t.isFirst && showFlag[key]) ? `${t.flag} ` : '';
         const locStr = (t && t.isFirst) ? `${flag}${t.label}` : '';
-        let inner = `<div class="d-num-row">${needsPin?'<span class="d-pin"></span>':''}<span class="d-num">${day}</span>${locStr ? `<span class="d-loc">${locStr}</span>` : ''}</div>`;
+        let inner = `<div class="d-num-row"><span class="d-num">${day}</span>${needsPin?'<span class="d-pin"></span>':''}${locStr ? `<span class="d-loc">${locStr}</span>` : ''}</div>`;
         if (t && t.isFirst && t.note) {
           const isUrl = t.note.startsWith('http://') || t.note.startsWith('https://');
           inner += `<span class="d-note">${isUrl ? '🔗' : t.note}</span>`;
