@@ -1,9 +1,11 @@
-import { getSession, signInWithGoogle, signOut, onAuthChange } from './auth.js';
+import { getSession, signInWithGoogle, signOut, onAuthChange, getGmailAccessToken } from './auth.js';
 import { getTrips, saveTrip, deleteTrip, getEvents, saveEvent, deleteEvent } from './db.js';
 import { buildDayMap, TODAY } from './utils.js';
 import { renderNav, renderCalendar, renderSummary, shiftSummaryYear } from './calendar.js';
-import { renderStatus } from './status.js';
-import { initEditor, handleDayClick, handleEventBarClick, openPopupNew, closePopup, openEditDrawer } from './editor.js';
+import { renderStatus, setGmailBarState } from './status.js';
+import { initEditor, handleDayClick, handleEventBarClick, openPopupNew, closePopup, openEditDrawer, openGmailPreFill } from './editor.js';
+import { scanGmail, airportCountry } from './gmail.js';
+import { openGmailDrawer, closeGmailDrawer, updateGmailDrawerStays } from './gmail-drawer.js';
 
 // ── view state ────────────────────────────────────────────────────────────────
 let viewYear   = TODAY.getFullYear();
@@ -13,6 +15,7 @@ let viewMonths = 6;
 // ── data state ────────────────────────────────────────────────────────────────
 let stays  = [];
 let events = [];
+let suggestions = null; // { matched: [], unmatched: [], lastMessageId }
 
 // ── render ───────────────────────────────────────────────────────────────────
 function render() {
@@ -62,12 +65,103 @@ async function onDelete(type, id) {
     const s = stays.find(x => x.id === id);
     if (s) {
       const nowBooked = !s.booked;
-      // Persist via accom.booked override (the schema's manual-override mechanism)
-      const accom = s.accom ? { ...s.accom, booked: nowBooked } : { booked: nowBooked, name: null, address: null, booking_ref: null, source: 'manual' };
-      await saveTrip({ ...s, accom });
+      await saveTrip({ ...s, booked_transportation: nowBooked, booked_stay: nowBooked, booked: nowBooked });
     }
   }
   await loadAndRender();
+}
+
+async function runGmailScan() {
+  setGmailBarState('scanning');
+  try {
+    const token = await getGmailAccessToken();
+    if (!token) {
+      setGmailBarState('disconnected', {
+        onConnect: signInWithGoogle,
+        onDismissConnect: () => {},
+      });
+      return;
+    }
+    suggestions = await scanGmail(token, stays);
+    const count = suggestions.matched.length + suggestions.unmatched.length;
+    if (count > 0) {
+      setGmailBarState('found', {
+        count,
+        onBarClick: openDrawer,
+        onRescan: runGmailScan,
+      });
+    } else {
+      setGmailBarState('uptodate', { onRescan: runGmailScan });
+    }
+  } catch (err) {
+    if (err.code === 'NO_GMAIL_SCOPE') {
+      setGmailBarState('disconnected', {
+        onConnect: signInWithGoogle,
+        onDismissConnect: () => {},
+      });
+    } else {
+      console.error('Gmail scan error:', err);
+      setGmailBarState('hidden');
+    }
+  }
+}
+
+function openDrawer() {
+  if (!suggestions) return;
+  openGmailDrawer(
+    suggestions,
+    stays,
+    async (action, booking, stay) => {
+      if (action === 'accept') {
+        const merged = mergeBookingIntoStay(booking, stay);
+        await saveTrip(merged);
+        await loadAndRender();
+        suggestions.matched = suggestions.matched.filter(m => m.booking !== booking);
+        updateGmailDrawerStays(stays);
+        const count = suggestions.matched.length + suggestions.unmatched.length;
+        if (count > 0) setGmailBarState('found', { count, onBarClick: openDrawer, onRescan: runGmailScan });
+        else { setGmailBarState('uptodate', { onRescan: runGmailScan }); closeGmailDrawer(); }
+      } else if (action === 'edit') {
+        closeGmailDrawer();
+        openGmailPreFill(booking, stay);
+      } else if (action === 'create') {
+        closeGmailDrawer();
+        openPopupNew(null, booking.dateStart);
+      }
+    },
+    () => {
+      const count = suggestions.matched.length + suggestions.unmatched.length;
+      if (count === 0) { setGmailBarState('uptodate', { onRescan: runGmailScan }); }
+    },
+  );
+}
+
+function mergeBookingIntoStay(booking, stay) {
+  if (booking.type === 'flight') {
+    const leg = booking.inbound;
+    const isInbound = leg && stay.country && airportCountry(leg.destination) === stay.country;
+    const flightObj = leg
+      ? { number: `${leg.carrier} ${leg.ref}`, booking_ref: booking.ref, confirmed: null, source: 'gmail' }
+      : null;
+    return {
+      ...stay,
+      flight_in:  isInbound  ? (flightObj ?? stay.flight_in)  : stay.flight_in,
+      flight_out: !isInbound ? (flightObj ?? stay.flight_out) : stay.flight_out,
+    };
+  }
+  if (booking.type === 'accommodation') {
+    return {
+      ...stay,
+      accom: {
+        name: booking.inbound?.destination || '',
+        address: '',
+        booking_ref: booking.ref,
+        booked: null,
+        source: 'gmail',
+      },
+    };
+  }
+  return stay;
 }
 
 // ── nav ───────────────────────────────────────────────────────────────────────
@@ -164,6 +258,7 @@ async function boot() {
   if (session) {
     showApp();
     await loadAndRender();
+    runGmailScan();
   } else {
     showAuthGate();
   }
@@ -173,6 +268,7 @@ async function boot() {
     if (session) {
       showApp();
       await loadAndRender();
+      runGmailScan();
     } else {
       showAuthGate();
     }
