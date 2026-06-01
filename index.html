@@ -42,6 +42,7 @@
     </div>
   </div>
 
+  <div id="gmailBar" style="display:none;"></div>
   <div class="status-bar" id="statusLine"></div>
 
   <div class="cal-surface">
@@ -102,9 +103,15 @@
           <div class="field"><label>End</label><input type="date" id="pEnd"></div>
         </div>
         <div class="field"><label>Note</label><input type="text" id="pNote" placeholder="e.g. 🎵 Sonorama, passport…"></div>
-        <div class="field" style="display:flex;align-items:center;gap:8px;">
-          <input type="checkbox" id="pBooked" style="width:auto;">
-          <label for="pBooked" style="font-size:11px;text-transform:none;letter-spacing:0;color:#3d2b1f;">Booked</label>
+        <div class="field" style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="pBookedTransport" style="width:auto;">
+            <label for="pBookedTransport" style="font-size:11px;text-transform:none;letter-spacing:0;color:#3d2b1f;">✈️ Transportation booked</label>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="pBookedStay" style="width:auto;">
+            <label for="pBookedStay" style="font-size:11px;text-transform:none;letter-spacing:0;color:#3d2b1f;">🏠 Stay booked</label>
+          </div>
         </div>
       </div>
       <div id="stayPanelFlight" style="display:none;">
@@ -174,6 +181,17 @@
     <button class="save-btn" id="btnDrawerSave">Save &amp; close</button>
   </div>
 </div>
+
+  <!-- GMAIL DRAWER -->
+  <div class="edit-overlay" id="gmailOverlay" style="display:none;"></div>
+  <div class="edit-drawer" id="gmailDrawer" style="display:none;" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <h2>📬 Gmail Booking Suggestions</h2>
+      <button class="popup-close" id="btnGmailDrawerClose">✕</button>
+    </div>
+    <p class="drawer-subtitle" id="gmailDrawerSubtitle"></p>
+    <div id="gmailSuggestionList"></div>
+  </div>
 
 <script type="module" src="src/main.js"></script>
 </body>
