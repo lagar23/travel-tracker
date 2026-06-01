@@ -14,7 +14,10 @@ export async function getSession() {
 export async function signInWithGoogle() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + window.location.pathname },
+    options: {
+      scopes: 'email profile gmail.readonly',
+      redirectTo: window.location.origin + window.location.pathname,
+    },
   });
   if (error) throw error;
 }
@@ -26,4 +29,10 @@ export async function signOut() {
 
 export function onAuthChange(callback) {
   supabase.auth.onAuthStateChange((_event, session) => callback(session));
+}
+
+export async function getGmailAccessToken() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data?.session) return null;
+  return data.session.provider_token ?? null;
 }
