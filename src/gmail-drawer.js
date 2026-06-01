@@ -1,3 +1,5 @@
+import { airportCity } from './gmail.js';
+
 let _onAccept = null;
 let _onDismiss = null;
 let _currentSuggestions = null;
@@ -7,16 +9,24 @@ const TYPE_ICON = { flight: '✈️', accommodation: '🏠', train: '🚂', bus:
 
 const safe = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
+function fmtDate(ymd) {
+  if (!ymd) return '';
+  return `${ymd.slice(0,4)}-${ymd.slice(4,6)}-${ymd.slice(6,8)}`;
+}
+
 function summaryLine(booking) {
-  const icon = TYPE_ICON[booking.type] ?? '📋';
-  const carrier = booking.inbound?.carrier || booking.type;
-  const route   = booking.inbound?.origin && booking.inbound?.destination
-    ? ` — ${booking.inbound.origin}→${booking.inbound.destination}`
-    : '';
-  const date    = booking.dateStart
-    ? ` · ${booking.dateStart.slice(0,4)}-${booking.dateStart.slice(4,6)}-${booking.dateStart.slice(6,8)}`
-    : '';
-  const ref     = booking.ref ? ` · Ref: ${booking.ref}` : '';
+  const icon    = TYPE_ICON[booking.type] ?? '📋';
+  const carrier = safe(booking.inbound?.carrier || booking.type);
+  let route = '';
+  if (booking.inbound?.origin && booking.inbound?.destination) {
+    const from = safe(airportCity(booking.inbound.origin));
+    const to   = safe(airportCity(booking.inbound.destination));
+    route = ` — ${from} → ${to}`;
+  } else if (booking.type === 'accommodation' && booking.inbound?.destination) {
+    route = ` — ${safe(booking.inbound.destination)}`;
+  }
+  const date = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
+  const ref  = booking.ref ? ` · Ref: ${safe(booking.ref)}` : '';
   return `${icon} ${carrier}${route}${date}${ref}`;
 }
 
@@ -36,7 +46,7 @@ function renderRow(item, index, isMatched) {
 
   return `<div class="gmail-row" data-idx="${index}" data-matched="${isMatched}">
     <div class="gmail-row-body">
-      <div class="gmail-summary">${safe(summaryLine(booking))}</div>
+      <div class="gmail-summary">${summaryLine(booking)}</div>
       <div class="gmail-match">${matchLine(booking, stay)}</div>
       <a href="${safe(booking.gmailUrl)}" target="_blank" rel="noopener noreferrer" class="gmail-email-link">View email →</a>
     </div>

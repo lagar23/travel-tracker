@@ -372,6 +372,40 @@ export const AIRPORT_COUNTRY = {
   DXB:'UAE', AUH:'UAE',
   DOH:'Qatar', IST:'Turkey',
 };
+
+export const AIRPORT_CITY = {
+  MAD:'Madrid', BCN:'Barcelona', AGP:'Málaga', ALC:'Alicante', PMI:'Palma', SVQ:'Seville', VLC:'Valencia',
+  DUB:'Dublin', ORK:'Cork', SNN:'Shannon',
+  LHR:'London', LGW:'London', LTN:'London', STN:'London', MAN:'Manchester', EDI:'Edinburgh',
+  CDG:'Paris', ORY:'Paris', NCE:'Nice',
+  FCO:'Rome', MXP:'Milan', VCE:'Venice', NAP:'Naples',
+  AMS:'Amsterdam', BRU:'Brussels', ZRH:'Zurich',
+  FRA:'Frankfurt', MUC:'Munich', BER:'Berlin',
+  LIS:'Lisbon', OPO:'Porto', FAO:'Faro',
+  BKK:'Bangkok', DMK:'Bangkok',
+  JFK:'New York', LAX:'Los Angeles', ORD:'Chicago', BOS:'Boston', MIA:'Miami', SFO:'San Francisco',
+  YYZ:'Toronto', YUL:'Montreal', YVR:'Vancouver',
+  DXB:'Dubai', AUH:'Abu Dhabi',
+  DOH:'Doha', IST:'Istanbul',
+  ORK:'Cork', SNN:'Shannon',
+  GRX:'Granada', MRS:'Marseille', VIE:'Vienna', PRG:'Prague', WAW:'Warsaw',
+  ATH:'Athens', SKG:'Thessaloniki', HER:'Heraklion',
+  CPH:'Copenhagen', ARN:'Stockholm', OSL:'Oslo', HEL:'Helsinki',
+  KEF:'Reykjavik', DUB:'Dublin',
+  NBO:'Nairobi', CPT:'Cape Town', JNB:'Johannesburg',
+  SYD:'Sydney', MEL:'Melbourne', BNE:'Brisbane',
+  NRT:'Tokyo', HND:'Tokyo', KIX:'Osaka', NGO:'Nagoya',
+  ICN:'Seoul', PEK:'Beijing', PVG:'Shanghai', HKG:'Hong Kong',
+  SIN:'Singapore', KUL:'Kuala Lumpur', CGK:'Jakarta',
+  BOM:'Mumbai', DEL:'Delhi', BLR:'Bangalore', MAA:'Chennai',
+  GRU:'São Paulo', EZE:'Buenos Aires', SCL:'Santiago', BOG:'Bogotá', LIM:'Lima',
+  ALA:'Almaty', TSE:'Astana',
+};
+
+export function airportCity(iata) {
+  return AIRPORT_CITY[iata?.toUpperCase()] ?? iata?.toUpperCase() ?? '';
+}
+
 export function airportCountry(iata) {
   return AIRPORT_COUNTRY[iata?.toUpperCase()] ?? null;
 }
