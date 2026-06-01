@@ -79,4 +79,5 @@ export function renderStatus(stays, events) {
     `<span class="unbooked">● ${unbooked} still to book</span>` +
     (nextUnbooked ? `<span>Next unbooked: ${nextUnbooked.flag} ${nextUnbooked.label} (${fmtYMD(nextUnbooked.start)})</span>` : '') +
     `<span id="gmailBar" style="margin-left:auto;display:none;align-items:center;gap:6px;font-size:10px;font-family:-apple-system,sans-serif;"></span>`;
+  renderGmailBar();
 }
