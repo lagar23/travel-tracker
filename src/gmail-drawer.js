@@ -21,15 +21,14 @@ function summaryLine(booking) {
   if (booking.inbound?.origin && booking.inbound?.destination) {
     const from = safe(airportCity(booking.inbound.origin));
     const to   = safe(airportCity(booking.inbound.destination));
-    route = ` — ${from} → ${to}`;
+    route = ` · ${from} → ${to}`;
   } else if (booking.type === 'accommodation' && booking.inbound?.destination) {
-    route = ` — ${safe(booking.inbound.destination)}`;
-  } else if (booking.subject) {
-    route = ` — ${safe(booking.subject.slice(0, 60))}`;
+    route = ` · ${safe(booking.inbound.destination)}`;
   }
-  const date = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
-  const ref  = booking.ref ? ` · Ref: ${safe(booking.ref)}` : '';
-  return `${icon} ${carrier}${route}${date}${ref}`;
+  const date       = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
+  const ref        = booking.ref ? ` · Ref: ${safe(booking.ref)}` : '';
+  const flightNum  = booking.inbound?.ref ? ` · ${safe(booking.inbound.carrier)} ${safe(booking.inbound.ref)}` : '';
+  return `${icon} ${carrier}${route}${date}${ref}${flightNum}`;
 }
 
 function matchLine(booking, stay) {
