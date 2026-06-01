@@ -97,30 +97,30 @@ function extractRoute(body) {
   // City (IATA) to/→/- City (IATA) — "Dublin (DUB) to Madrid (MAD)"
   const cityIata = body.match(/([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)\s*(?:to|[-–→])\s*([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)/);
   if (cityIata && validRoute(cityIata[2], cityIata[4])) {
-    return { origin: cityIata[1].trim(), dest: cityIata[3].trim() };
+    return { origin: cityIata[1].trim(), dest: cityIata[3].trim(), destIata: cityIata[4] };
   }
   // IATA (City) to IATA (City) — "DUB (Dublin) → MAD (Madrid)"
   const iataCity = body.match(/\b([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)/);
   if (iataCity && validRoute(iataCity[1], iataCity[3])) {
-    return { origin: iataCity[2].trim(), dest: iataCity[4].trim() };
+    return { origin: iataCity[2].trim(), dest: iataCity[4].trim(), destIata: iataCity[3] };
   }
   // Bare IATA arrow: MAD → DUB
   const arrow = body.match(/\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/);
   if (arrow && validRoute(arrow[1], arrow[2])) {
-    return { origin: airportCity(arrow[1]), dest: airportCity(arrow[2]) };
+    return { origin: airportCity(arrow[1]), dest: airportCity(arrow[2]), destIata: arrow[2] };
   }
   // "from Dublin to Madrid"
   const fromTo = body.match(/\bfrom\s+([A-Za-z][A-Za-z ]{1,20}?)\s+to\s+([A-Za-z][A-Za-z ]{1,20}?)(?:\s*[,(]|\s*$)/i);
   if (fromTo) {
     const o = fromTo[1].trim(), d = fromTo[2].trim();
     if (o.length >= 3 && d.length >= 3 && /^[A-Z]/.test(o) && /^[A-Z]/.test(d)) {
-      return { origin: o, dest: d };
+      return { origin: o, dest: d, destIata: null };
     }
   }
   // Bare "XXX to YYY" IATA codes
   const toForm = body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
   if (toForm && validRoute(toForm[1], toForm[2])) {
-    return { origin: airportCity(toForm[1]), dest: airportCity(toForm[2]) };
+    return { origin: airportCity(toForm[1]), dest: airportCity(toForm[2]), destIata: toForm[2] };
   }
   return null;
 }
@@ -145,7 +145,7 @@ const PARSERS = [
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: route ? airportCountry(route.dest) : null,
+        country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         ref: refM[1],
         subject,
         sender,
@@ -168,7 +168,7 @@ const PARSERS = [
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: route ? airportCountry(route.dest) : null,
+        country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         ref: refM[1],
         subject,
         sender,
@@ -191,7 +191,7 @@ const PARSERS = [
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: route ? airportCountry(route.dest) : null,
+        country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         ref: refM[1],
         subject,
         sender,
@@ -214,7 +214,7 @@ const PARSERS = [
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: route ? airportCountry(route.dest) : null,
+        country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         ref: refM[1],
         subject,
         sender,
@@ -237,7 +237,7 @@ const PARSERS = [
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: route ? airportCountry(route.dest) : null,
+        country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         ref: refM[1],
         subject,
         sender,
@@ -383,7 +383,7 @@ const PARSERS = [
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: route ? airportCountry(route.dest) : null,
+        country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         ref: refM?.[1] || '',
         subject,
         sender,
@@ -494,10 +494,35 @@ function matchBooking(booking, stays) {
   if (!booking.dateStart) return null;
   const ds = booking.dateStart;
   const candidates = stays.filter(s => ds >= s.start && ds <= s.end);
-  if (candidates.length === 0) return null;
+
+  if (candidates.length === 0) {
+    // No date overlap — try the stay that starts closest after this date
+    const next = stays
+      .filter(s => s.start > ds)
+      .sort((a, b) => a.start.localeCompare(b.start))[0];
+    return next ?? null;
+  }
+
   if (candidates.length === 1) return candidates[0];
-  const countryMatch = candidates.find(s => s.country === booking.country);
-  return countryMatch ?? candidates[0];
+
+  // Multiple candidates — prefer the one whose country matches the destination
+  const destCountry = booking.country; // already set from destination airport
+  const destMatch = candidates.find(s => s.country === destCountry);
+  if (destMatch) return destMatch;
+
+  // For flights: if the booking date is the last day of a stay, it's likely
+  // the departure flight — prefer the next stay instead
+  if (booking.type === 'flight') {
+    const departureStay = candidates.find(s => s.end === ds);
+    if (departureStay) {
+      const nextStay = stays
+        .filter(s => s.start >= ds && s !== departureStay)
+        .sort((a, b) => a.start.localeCompare(b.start))[0];
+      if (nextStay) return nextStay;
+    }
+  }
+
+  return candidates[0];
 }
 
 export async function scanGmail(accessToken, stays) {
