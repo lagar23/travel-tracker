@@ -1,5 +1,4 @@
 import { getSupabase } from './auth.js';
-import { isTripBooked } from './utils.js';
 
 // YYYYMMDD → YYYY-MM-DD (for Supabase)
 function toIso(ymd) {
@@ -11,6 +10,8 @@ function fromIso(iso) {
 }
 
 function tripToApp(row) {
+  const bookedTransport = row.booked_transportation ?? false;
+  const bookedStay      = row.booked_stay ?? false;
   return {
     id:       row.id,
     type:     'stay',
@@ -28,7 +29,9 @@ function tripToApp(row) {
     flight_in:  row.flight_in,
     flight_out: row.flight_out,
     accom:    row.accom,
-    booked: isTripBooked({ booked: row.booked, flight_in: row.flight_in, flight_out: row.flight_out, accom: row.accom }),
+    booked_transportation: bookedTransport,
+    booked_stay:           bookedStay,
+    booked: bookedTransport && bookedStay,
   };
 }
 
@@ -68,7 +71,9 @@ export async function saveTrip(trip) {
     flag:       trip.flag,
     css_class:  trip.cssClass,
     color:      trip.color || null,
-    booked:     trip.booked || false,
+    booked:     (trip.booked_transportation ?? false) && (trip.booked_stay ?? false),
+    booked_transportation: trip.booked_transportation ?? false,
+    booked_stay:           trip.booked_stay ?? false,
     start_date: toIso(trip.start),
     end_date:   toIso(trip.end),
     note:       trip.note || '',
