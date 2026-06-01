@@ -4,7 +4,7 @@ import { buildDayMap, TODAY } from './utils.js';
 import { renderNav, renderCalendar, renderSummary, shiftSummaryYear } from './calendar.js';
 import { renderStatus, setGmailBarState } from './status.js';
 import { initEditor, handleDayClick, handleEventBarClick, openPopupNew, closePopup, openEditDrawer, openGmailPreFill } from './editor.js';
-import { scanGmail, airportCountry, LAST_ID_KEY } from './gmail.js';
+import { scanGmail, airportCountry, LAST_ID_KEY, SUGGESTIONS_KEY, DISMISSED_REFS_KEY } from './gmail.js';
 import { openGmailDrawer, closeGmailDrawer, updateGmailDrawerStays } from './gmail-drawer.js';
 
 // ── view state ────────────────────────────────────────────────────────────────
@@ -71,8 +71,65 @@ async function onDelete(type, id) {
   await loadAndRender();
 }
 
+function saveSuggestions(s) {
+  try { localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(s)); } catch {}
+}
+
+function loadPersistedSuggestions() {
+  try {
+    const raw = localStorage.getItem(SUGGESTIONS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function dismissedRefs() {
+  try { return new Set(JSON.parse(localStorage.getItem(DISMISSED_REFS_KEY) || '[]')); } catch { return new Set(); }
+}
+
+function addDismissedRef(ref) {
+  const refs = dismissedRefs();
+  if (ref) refs.add(ref);
+  try { localStorage.setItem(DISMISSED_REFS_KEY, JSON.stringify([...refs])); } catch {}
+}
+
+function filterDismissed(s) {
+  const dismissed = dismissedRefs();
+  const key = b => b.ref || b.gmailUrl;
+  return {
+    matched:   s.matched.filter(m => !dismissed.has(key(m.booking))),
+    unmatched: s.unmatched.filter(b => !dismissed.has(key(b))),
+    lastMessageId: s.lastMessageId,
+  };
+}
+
+function applyAndShowSuggestions(s) {
+  suggestions = filterDismissed(s);
+  saveSuggestions(s); // persist pre-filter so re-opens after dismiss still work
+  const count = suggestions.matched.length + suggestions.unmatched.length;
+  if (count > 0) {
+    setGmailBarState('found', { count, onBarClick: openDrawer, onRescan: () => runGmailScan(true) });
+  } else {
+    setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) });
+  }
+}
+
 async function runGmailScan(fullRescan = false) {
-  if (fullRescan) localStorage.removeItem(LAST_ID_KEY);
+  if (fullRescan) {
+    localStorage.removeItem(LAST_ID_KEY);
+    localStorage.removeItem(SUGGESTIONS_KEY);
+    localStorage.removeItem(DISMISSED_REFS_KEY);
+  }
+
+  // Restore persisted suggestions immediately while we (re)fetch
+  if (!fullRescan) {
+    const persisted = loadPersistedSuggestions();
+    if (persisted) {
+      applyAndShowSuggestions(persisted);
+      return; // don't re-fetch on plain page load, only on explicit rescan
+    }
+  }
+
   setGmailBarState('scanning');
   try {
     const token = await getGmailAccessToken();
@@ -83,17 +140,8 @@ async function runGmailScan(fullRescan = false) {
       });
       return;
     }
-    suggestions = await scanGmail(token, stays);
-    const count = suggestions.matched.length + suggestions.unmatched.length;
-    if (count > 0) {
-      setGmailBarState('found', {
-        count,
-        onBarClick: openDrawer,
-        onRescan: () => runGmailScan(true),
-      });
-    } else {
-      setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) });
-    }
+    const fresh = await scanGmail(token, stays);
+    applyAndShowSuggestions(fresh);
   } catch (err) {
     if (err.code === 'NO_GMAIL_SCOPE') {
       setGmailBarState('disconnected', {
@@ -117,7 +165,9 @@ function openDrawer() {
         const merged = mergeBookingIntoStay(booking, stay);
         await saveTrip(merged);
         await loadAndRender();
+        addDismissedRef(booking.ref || booking.gmailUrl);
         suggestions.matched = suggestions.matched.filter(m => m.booking !== booking);
+        saveSuggestions(loadPersistedSuggestions() ?? suggestions);
         updateGmailDrawerStays(stays, suggestions.matched);
         const count = suggestions.matched.length + suggestions.unmatched.length;
         if (count > 0) setGmailBarState('found', { count, onBarClick: openDrawer, onRescan: () => runGmailScan(true) });
@@ -130,7 +180,9 @@ function openDrawer() {
         openPopupNew(null, booking.dateStart);
       }
     },
-    () => {
+    (dismissedBooking) => {
+      if (dismissedBooking) addDismissedRef(dismissedBooking.ref || dismissedBooking.gmailUrl);
+      saveSuggestions(loadPersistedSuggestions() ?? suggestions);
       const count = suggestions.matched.length + suggestions.unmatched.length;
       if (count === 0) { setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) }); }
     },

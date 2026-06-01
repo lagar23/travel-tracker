@@ -16,7 +16,9 @@ const GMAIL_SEARCH = [
   'after:2024/01/01',
 ].join(' ');
 
-export const LAST_ID_KEY = 'gmailLastMessageId';
+export const LAST_ID_KEY       = 'gmailLastMessageId';
+export const SUGGESTIONS_KEY   = 'gmailSuggestions';
+export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
 
 async function fetchMessageIds(token, afterDate) {
   const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;

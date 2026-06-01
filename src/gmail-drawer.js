@@ -104,13 +104,16 @@ function wireButtons() {
       const idx     = parseInt(btn.dataset.idx);
       const { matched, unmatched } = _currentSuggestions;
       const isMatched = idx < matched.length;
+      let dismissedBooking;
       if (isMatched) {
+        dismissedBooking = matched[idx]?.booking;
         _currentSuggestions.matched.splice(idx, 1);
       } else {
+        dismissedBooking = unmatched[idx - matched.length];
         _currentSuggestions.unmatched.splice(idx - matched.length, 1);
       }
       renderList();
-      _onDismiss();
+      _onDismiss(dismissedBooking);
     });
   });
 }
