@@ -47,7 +47,7 @@ function renderGmailBar() {
 
   if (_gmailState === 'scanning') {
     bar.style.cssText = 'background:#f0ead8;border-bottom:1px solid #d4c4a8;padding:0 24px;height:30px;display:flex;align-items:center;gap:10px;font-size:10px;color:#9a8070;font-family:-apple-system,sans-serif;';
-    bar.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#c0a030;"></span>Scanning Gmail for bookings…`;
+    bar.innerHTML = `<span class="gmail-dot-pulse" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#c0a030;"></span>Scanning Gmail for bookings…`;
     return;
   }
 
