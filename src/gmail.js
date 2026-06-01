@@ -76,6 +76,12 @@ function gmailUrl(id) {
   return `https://mail.google.com/mail/u/0/#inbox/${id}`;
 }
 
+function validRoute(origin, dest) {
+  const o = origin?.toUpperCase();
+  const d = dest?.toUpperCase();
+  return !!(o && d && AIRPORT_COUNTRY[o] && AIRPORT_COUNTRY[d]);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 3: Per-sender parsers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,17 +92,18 @@ const PARSERS = [
     test: (s) => s.includes('ryanair.com'),
     parse(body, subject, sender, msgId) {
       const refM  = subject.match(/\b([A-Z0-9]{6})\b/) || body.match(/booking\s+(?:reference|ref)[:\s]+([A-Z0-9]{6})/i);
-      const routeM  = body.match(/\b([A-Z]{3})\s*[→\-–to]+\s*([A-Z]{3})\b/i);
+      const routeM  = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/) || body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
+      const route   = routeM && validRoute(routeM[1], routeM[2]) ? routeM : null;
       const dateM   = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
       return {
         type: 'flight',
-        inbound:  routeM ? { date: dateStart, origin: routeM[1], destination: routeM[2], ref: refM[1], carrier: 'Ryanair' } : null,
+        inbound:  route ? { date: dateStart, origin: route[1].toUpperCase(), destination: route[2].toUpperCase(), ref: refM[1], carrier: 'Ryanair' } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: routeM ? airportCountry(routeM[2]) : null,
+        country: route ? airportCountry(route[2]) : null,
         ref: refM[1],
         subject,
         sender,
@@ -109,17 +116,18 @@ const PARSERS = [
     test: (s) => s.includes('iberia.com'),
     parse(body, subject, sender, msgId) {
       const refM   = body.match(/localizador[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
-      const routeM  = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/i);
+      const routeM  = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/);
+      const route   = routeM && validRoute(routeM[1], routeM[2]) ? routeM : null;
       const dateM   = body.match(/\b(\d{1,2})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
       return {
         type: 'flight',
-        inbound:  routeM ? { date: dateStart, origin: routeM[1], destination: routeM[2], ref: refM[1], carrier: 'Iberia' } : null,
+        inbound:  route ? { date: dateStart, origin: route[1].toUpperCase(), destination: route[2].toUpperCase(), ref: refM[1], carrier: 'Iberia' } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: routeM ? airportCountry(routeM[2]) : null,
+        country: route ? airportCountry(route[2]) : null,
         ref: refM[1],
         subject,
         sender,
@@ -132,17 +140,18 @@ const PARSERS = [
     test: (s) => s.includes('vueling.com'),
     parse(body, subject, sender, msgId) {
       const refM  = body.match(/(?:booking\s+ref(?:erence)?|localizador|confirmation)[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
-      const routeM = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/i);
+      const routeM = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/);
+      const route  = routeM && validRoute(routeM[1], routeM[2]) ? routeM : null;
       const dateM  = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
       return {
         type: 'flight',
-        inbound:  routeM ? { date: dateStart, origin: routeM[1], destination: routeM[2], ref: refM[1], carrier: 'Vueling' } : null,
+        inbound:  route ? { date: dateStart, origin: route[1].toUpperCase(), destination: route[2].toUpperCase(), ref: refM[1], carrier: 'Vueling' } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: routeM ? airportCountry(routeM[2]) : null,
+        country: route ? airportCountry(route[2]) : null,
         ref: refM[1],
         subject,
         sender,
@@ -155,17 +164,18 @@ const PARSERS = [
     test: (s) => s.includes('aerlingus.com'),
     parse(body, subject, sender, msgId) {
       const refM   = body.match(/booking\s+reference[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
-      const routeM  = body.match(/\b([A-Z]{3})\s*[→\-–to]+\s*([A-Z]{3})\b/i);
+      const routeM  = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/) || body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
+      const route   = routeM && validRoute(routeM[1], routeM[2]) ? routeM : null;
       const dateM   = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
       return {
         type: 'flight',
-        inbound:  routeM ? { date: dateStart, origin: routeM[1], destination: routeM[2], ref: refM[1], carrier: 'Aer Lingus' } : null,
+        inbound:  route ? { date: dateStart, origin: route[1].toUpperCase(), destination: route[2].toUpperCase(), ref: refM[1], carrier: 'Aer Lingus' } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: routeM ? airportCountry(routeM[2]) : null,
+        country: route ? airportCountry(route[2]) : null,
         ref: refM[1],
         subject,
         sender,
@@ -178,17 +188,18 @@ const PARSERS = [
     test: (s) => s.includes('easyjet.com'),
     parse(body, subject, sender, msgId) {
       const refM  = body.match(/booking\s+reference[:\s]+([A-Z0-9]{6,8})/i) || subject.match(/\b([A-Z0-9]{6,8})\b/);
-      const routeM = body.match(/\b([A-Z]{3})\s*[→\-–to]+\s*([A-Z]{3})\b/i);
+      const routeM = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/) || body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
+      const route  = routeM && validRoute(routeM[1], routeM[2]) ? routeM : null;
       const dateM  = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
       return {
         type: 'flight',
-        inbound:  routeM ? { date: dateStart, origin: routeM[1], destination: routeM[2], ref: refM[1], carrier: 'easyJet' } : null,
+        inbound:  route ? { date: dateStart, origin: route[1].toUpperCase(), destination: route[2].toUpperCase(), ref: refM[1], carrier: 'easyJet' } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: routeM ? airportCountry(routeM[2]) : null,
+        country: route ? airportCountry(route[2]) : null,
         ref: refM[1],
         subject,
         sender,
@@ -324,17 +335,18 @@ const PARSERS = [
     test: (_s, subject) => /confirmation|booking|itinerary|billete/i.test(subject),
     parse(body, subject, sender, msgId) {
       const routeM = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/);
+      const route  = routeM && validRoute(routeM[1], routeM[2]) ? routeM : null;
       const refM   = body.match(/(?:booking\s+ref(?:erence)?|confirmation\s+(?:number|code)|localizador)[:\s]+([A-Z0-9]{5,12})/i);
       const dateM  = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
-      if (!routeM && !refM) return null;
+      if (!route && !refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
       return {
         type: 'flight',
-        inbound:  routeM ? { date: dateStart, origin: routeM[1], destination: routeM[2], ref: refM?.[1] || '', carrier: '' } : null,
+        inbound:  route ? { date: dateStart, origin: route[1].toUpperCase(), destination: route[2].toUpperCase(), ref: refM?.[1] || '', carrier: '' } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
-        country: routeM ? airportCountry(routeM[2]) : null,
+        country: route ? airportCountry(route[2]) : null,
         ref: refM?.[1] || '',
         subject,
         sender,
