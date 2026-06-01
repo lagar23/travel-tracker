@@ -36,11 +36,11 @@ async function loadAndRender() {
 // ── save / delete callbacks (passed to editor) ────────────────────────────────
 async function onSave(type, payload) {
   if (type === 'stay') {
+    closePopup();
     await saveTrip(payload);
-    closePopup();
   } else if (type === 'event') {
-    await saveEvent(payload);
     closePopup();
+    await saveEvent(payload);
   } else if (type === 'drawer') {
     // payload is array of { type, id, label, start, end, note? }
     await Promise.all(payload.map(u => {

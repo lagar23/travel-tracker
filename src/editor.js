@@ -251,10 +251,6 @@ function updateEventNoteLink(val) {
 }
 
 async function saveEntry() {
-  console.log('saveEntry fired, popupMode=', popupMode,
-    'label=', document.getElementById('pEventLabel').value,
-    'start=', document.getElementById('pEventStart').value,
-    'end=', document.getElementById('pEventEnd').value);
   if (popupMode === 'stay') {
     const [country, flag] = document.getElementById('pCountry').value.split('|');
     const label    = document.getElementById('pLabel').value.trim() || country;
@@ -300,8 +296,7 @@ async function saveEntry() {
       return;
     }
     const event = { id: popupEditEventId || undefined, type: 'event', label, start, end, color: selectedColor, note, source: 'manual' };
-    console.log('calling _onSave with event', event, '_onSave=', _onSave);
-    try { await _onSave('event', event); console.log('_onSave resolved ok'); } catch(e) { console.error('Save event failed:', e); alert('Save failed: ' + e.message); }
+    try { await _onSave('event', event); } catch(e) { console.error('Save event failed:', e); alert('Save failed: ' + e.message); }
   }
 }
 
