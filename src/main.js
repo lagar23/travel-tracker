@@ -101,7 +101,7 @@ async function runGmailScan() {
       });
     } else {
       console.error('Gmail scan error:', err);
-      setGmailBarState('hidden');
+      setGmailBarState('uptodate', { onRescan: runGmailScan });
     }
   }
 }
@@ -117,7 +117,7 @@ function openDrawer() {
         await saveTrip(merged);
         await loadAndRender();
         suggestions.matched = suggestions.matched.filter(m => m.booking !== booking);
-        updateGmailDrawerStays(stays);
+        updateGmailDrawerStays(stays, suggestions.matched);
         const count = suggestions.matched.length + suggestions.unmatched.length;
         if (count > 0) setGmailBarState('found', { count, onBarClick: openDrawer, onRescan: runGmailScan });
         else { setGmailBarState('uptodate', { onRescan: runGmailScan }); closeGmailDrawer(); }

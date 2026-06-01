@@ -5,6 +5,8 @@ let _currentStays = null;
 
 const TYPE_ICON = { flight: '✈️', accommodation: '🏠', train: '🚂', bus: '🚌' };
 
+const safe = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
 function summaryLine(booking) {
   const icon = TYPE_ICON[booking.type] ?? '📋';
   const carrier = booking.inbound?.carrier || booking.type;
@@ -20,12 +22,11 @@ function summaryLine(booking) {
 
 function matchLine(booking, stay) {
   if (!stay) return `<span style="color:#c06040;">No match found</span>`;
-  return `<span style="color:#2e7040;">→ ${stay.flag} ${stay.country} ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}</span>`;
+  return `<span style="color:#2e7040;">→ ${safe(stay.flag)} ${safe(stay.country)} ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}</span>`;
 }
 
 function renderRow(item, index, isMatched) {
   const { booking, stay } = isMatched ? item : { booking: item, stay: null };
-  const safe = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   const actionBtns = isMatched
     ? `<button class="gmail-btn gmail-accept" data-idx="${index}">✓ Accept</button>
        <button class="gmail-btn gmail-edit"   data-idx="${index}">✎ Edit</button>
@@ -37,7 +38,7 @@ function renderRow(item, index, isMatched) {
     <div class="gmail-row-body">
       <div class="gmail-summary">${safe(summaryLine(booking))}</div>
       <div class="gmail-match">${matchLine(booking, stay)}</div>
-      <a href="${safe(booking.gmailUrl)}" target="_blank" class="gmail-email-link">View email →</a>
+      <a href="${safe(booking.gmailUrl)}" target="_blank" rel="noopener noreferrer" class="gmail-email-link">View email →</a>
     </div>
     <div class="gmail-row-actions">${actionBtns}</div>
   </div>`;
@@ -124,9 +125,10 @@ export function closeGmailDrawer() {
   document.getElementById('gmailDrawer').style.display  = 'none';
 }
 
-export function updateGmailDrawerStays(stays) {
+export function updateGmailDrawerStays(stays, matchedOverride) {
   if (!_currentSuggestions) return;
   _currentStays = stays;
+  if (matchedOverride) _currentSuggestions.matched = matchedOverride;
   const stillUnmatched = [];
   const newlyMatched   = [];
   for (const booking of _currentSuggestions.unmatched) {

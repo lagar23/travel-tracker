@@ -122,7 +122,7 @@ const PARSERS = [
     name: 'vueling',
     test: (s) => s.includes('vueling.com'),
     parse(body, subject, sender, msgId) {
-      const refM  = body.match(/\b([A-Z0-9]{6})\b/) || subject.match(/\b([A-Z0-9]{6})\b/);
+      const refM  = body.match(/(?:booking\s+ref(?:erence)?|localizador|confirmation)[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
       const routeM = body.match(/\b([A-Z]{3})\s*[→\-–]+\s*([A-Z]{3})\b/i);
       const dateM  = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
