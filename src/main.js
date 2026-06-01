@@ -16,6 +16,7 @@ let viewMonths = 6;
 let stays  = [];
 let events = [];
 let suggestions = null; // { matched: [], unmatched: [], lastMessageId }
+let _scanAbortController = null;
 
 // ── render ───────────────────────────────────────────────────────────────────
 function render() {
@@ -114,7 +115,18 @@ function applyAndShowSuggestions(s) {
   }
 }
 
+function stopGmailScan() {
+  _scanAbortController?.abort();
+  _scanAbortController = null;
+  setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) });
+}
+
 async function runGmailScan(fullRescan = false) {
+  // Cancel any in-progress scan
+  _scanAbortController?.abort();
+  _scanAbortController = new AbortController();
+  const { signal } = _scanAbortController;
+
   if (fullRescan) {
     localStorage.removeItem(LAST_ID_KEY);
     localStorage.removeItem(SUGGESTIONS_KEY);
@@ -126,11 +138,12 @@ async function runGmailScan(fullRescan = false) {
     const persisted = loadPersistedSuggestions();
     if (persisted) {
       applyAndShowSuggestions(persisted);
+      _scanAbortController = null;
       return; // don't re-fetch on plain page load, only on explicit rescan
     }
   }
 
-  setGmailBarState('scanning');
+  setGmailBarState('scanning', { onStop: stopGmailScan });
   try {
     const token = await getGmailAccessToken();
     if (!token) {
@@ -140,9 +153,10 @@ async function runGmailScan(fullRescan = false) {
       });
       return;
     }
-    const fresh = await scanGmail(token, stays);
+    const fresh = await scanGmail(token, stays, signal);
     applyAndShowSuggestions(fresh);
   } catch (err) {
+    if (err.code === 'ABORTED') return; // user stopped it — bar already set by stopGmailScan
     if (err.code === 'NO_GMAIL_SCOPE') {
       setGmailBarState('disconnected', {
         onConnect: signInWithGoogle,
@@ -152,6 +166,8 @@ async function runGmailScan(fullRescan = false) {
       console.error('Gmail scan error:', err);
       setGmailBarState('uptodate', { onRescan: () => runGmailScan(true) });
     }
+  } finally {
+    _scanAbortController = null;
   }
 }
 

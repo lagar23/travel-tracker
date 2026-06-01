@@ -20,14 +20,15 @@ export const LAST_ID_KEY       = 'gmailLastMessageId';
 export const SUGGESTIONS_KEY   = 'gmailSuggestions';
 export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
 
-async function fetchMessageIds(token, afterDate) {
+async function fetchMessageIds(token, afterDate, signal) {
   const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;
   const base = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${encodeURIComponent(q)}`;
   const ids = [];
   let pageToken = null;
   do {
+    if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
     const url = pageToken ? `${base}&pageToken=${pageToken}` : base;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
     if (!res.ok) throw Object.assign(new Error('Gmail fetch failed'), { status: res.status });
     const data = await res.json();
     if (data.messages) ids.push(...data.messages.map(m => m.id));
@@ -36,18 +37,19 @@ async function fetchMessageIds(token, afterDate) {
   return ids;
 }
 
-async function fetchMessage(token, id) {
+async function fetchMessage(token, id, signal) {
   const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
   if (!res.ok) return null;
   return res.json();
 }
 
-async function fetchMessages(token, ids) {
+async function fetchMessages(token, ids, signal) {
   const results = [];
   for (let i = 0; i < ids.length; i += 10) {
+    if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
     const batch = ids.slice(i, i + 10);
-    const fetched = await Promise.all(batch.map(id => fetchMessage(token, id)));
+    const fetched = await Promise.all(batch.map(id => fetchMessage(token, id, signal)));
     results.push(...fetched.filter(Boolean));
   }
   return results;
@@ -539,19 +541,20 @@ function matchBooking(booking, stays) {
   return { primary: candidates[0], secondary: null };
 }
 
-export async function scanGmail(accessToken, stays) {
+export async function scanGmail(accessToken, stays, signal) {
   const lastId = localStorage.getItem(LAST_ID_KEY) ?? null;
   let ids;
   try {
-    ids = await fetchMessageIds(accessToken, lastId);
+    ids = await fetchMessageIds(accessToken, lastId, signal);
   } catch (err) {
+    if (err.code === 'ABORTED' || err.name === 'AbortError') throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
     if (err.status === 403) throw Object.assign(err, { code: 'NO_GMAIL_SCOPE' });
     throw err;
   }
 
   if (ids.length === 0) return { matched: [], unmatched: [], lastMessageId: lastId };
 
-  const messages = await fetchMessages(accessToken, ids);
+  const messages = await fetchMessages(accessToken, ids, signal);
   const bookings = messages.map(parseMessage).filter(Boolean);
 
   const matched   = [];

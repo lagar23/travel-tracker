@@ -6,6 +6,7 @@ let _suggestionCount = 0;
 let _onBarClick  = null;
 let _onConnect   = null;
 let _onRescan    = null;
+let _onStop      = null;
 let _onDismissConnect = null;
 
 export function setGmailBarState(state, opts = {}) {
@@ -14,6 +15,7 @@ export function setGmailBarState(state, opts = {}) {
   _onBarClick      = opts.onBarClick    ?? _onBarClick;
   _onConnect       = opts.onConnect     ?? _onConnect;
   _onRescan        = opts.onRescan      ?? _onRescan;
+  _onStop          = opts.onStop        ?? _onStop;
   _onDismissConnect = opts.onDismissConnect ?? _onDismissConnect;
   if (state === 'uptodate' || state === 'found') _lastScanMs = Date.now();
   renderGmailBar();
@@ -48,7 +50,8 @@ function renderGmailBar() {
   }
 
   if (_gmailState === 'scanning') {
-    bar.innerHTML = `<span class="gmail-dot-pulse" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#c0a030;flex-shrink:0;"></span><span>Scanning Gmail…</span>`;
+    bar.innerHTML = `<span class="gmail-dot-pulse" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#c0a030;flex-shrink:0;"></span><span>Scanning Gmail…</span><span id="gmailBarStop" style="color:#9a8070;font-size:9px;cursor:pointer;text-decoration:underline;">Stop</span>`;
+    document.getElementById('gmailBarStop')?.addEventListener('click', () => _onStop?.());
     return;
   }
 
