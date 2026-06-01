@@ -172,8 +172,8 @@ Add notification bar rendering above the existing status bar. Four states:
 |-------|---------|------------|
 | `disconnected` | No Gmail scope | Beige — "📬 Connect Gmail…" + Connect button |
 | `scanning` | Scan in progress | Amber dot — "Scanning Gmail…" |
-| `found` | Suggestions available | Green dot — "N booking suggestions found — click to review" + "Rescan" |
-| `uptodate` | Scan complete, nothing new | Subtle — "✓ Gmail up to date · Last scanned X ago · Rescan" |
+| `found` | Suggestions available | Green dot — "N booking suggestions found — click to review" + "🔄 Rescan" button |
+| `uptodate` | Scan complete, nothing new | Subtle — "✓ Gmail up to date · Last scanned X ago" + "🔄 Rescan" button |
 
 Clicking the `found` bar opens the Gmail drawer.
 
