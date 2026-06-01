@@ -109,10 +109,10 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 .ls { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 3px; }
 
 /* ── POPUP ── */
-.popup-overlay { display: none; position: fixed; inset: 0; z-index: 50; }
+.popup-overlay { display: none; position: fixed; inset: 0; z-index: 110; }
 .popup-overlay.open { display: block; }
 .popup {
-  position: fixed; z-index: 51; display: none;
+  position: fixed; z-index: 111; display: none;
   background: #f5f0e6; border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   padding: 14px; width: 260px;
