@@ -82,21 +82,28 @@ function validRoute(origin, dest) {
   return !!(o && d && AIRPORT_COUNTRY[o] && AIRPORT_COUNTRY[d]);
 }
 
-// Tries multiple patterns to extract a valid {origin, dest} pair from email body
+// Tries multiple patterns to extract a valid {origin, dest} pair from email body.
+// Returns city names where possible, falling back to IATA codes.
 function extractRoute(body) {
-  const patterns = [
-    // Bare IATA arrow:  MAD → DUB  or  MAD – DUB
-    /\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/,
-    // City (IATA) to City (IATA)
-    /[A-Za-z ]+\(([A-Z]{3})\)\s*(?:to|-|–|→)\s*[A-Za-z ]+\(([A-Z]{3})\)/,
-    // IATA (City) to IATA (City)
-    /\b([A-Z]{3})\s*\([^)]+\)\s*(?:to|-|–|→)\s*([A-Z]{3})\s*\(/,
-    // Bare "XXX to YYY" (only when both are known airports)
-    /\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/,
-  ];
-  for (const re of patterns) {
-    const m = body.match(re);
-    if (m && validRoute(m[1], m[2])) return { origin: m[1].toUpperCase(), dest: m[2].toUpperCase() };
+  // City (IATA) to/→ City (IATA) — e.g. "Dublin (DUB) to Madrid (MAD)"
+  const cityIata = body.match(/([A-Za-z][A-Za-z '\-]+?)\s*\(([A-Z]{3})\)\s*(?:to|-|–|→)\s*([A-Za-z][A-Za-z '\-]+?)\s*\(([A-Z]{3})\)/);
+  if (cityIata && validRoute(cityIata[2], cityIata[4])) {
+    return { origin: cityIata[1].trim(), dest: cityIata[3].trim() };
+  }
+  // IATA (City) to IATA (City) — e.g. "DUB (Dublin) → MAD (Madrid)"
+  const iataCity = body.match(/\b([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]+?)\)\s*(?:to|-|–|→)\s*([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]+?)\)/);
+  if (iataCity && validRoute(iataCity[1], iataCity[3])) {
+    return { origin: iataCity[2].trim(), dest: iataCity[4].trim() };
+  }
+  // Bare IATA arrow: MAD → DUB — fall back to city name from map
+  const arrow = body.match(/\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/);
+  if (arrow && validRoute(arrow[1], arrow[2])) {
+    return { origin: airportCity(arrow[1]), dest: airportCity(arrow[2]) };
+  }
+  // Bare "XXX to YYY"
+  const toForm = body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
+  if (toForm && validRoute(toForm[1], toForm[2])) {
+    return { origin: airportCity(toForm[1]), dest: airportCity(toForm[2]) };
   }
   return null;
 }
