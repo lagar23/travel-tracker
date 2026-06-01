@@ -250,7 +250,7 @@ function updateEventNoteLink(val) {
   } else { link.style.display = 'none'; }
 }
 
-function saveEntry() {
+async function saveEntry() {
   if (popupMode === 'stay') {
     const [country, flag] = document.getElementById('pCountry').value.split('|');
     const label    = document.getElementById('pLabel').value.trim() || country;
@@ -285,7 +285,7 @@ function saveEntry() {
       accom: accomName ? { name: accomName, address: accomAddr, booking_ref: accomRef, booked: null, source: 'manual' } : null,
       tripNotes,
     };
-    _onSave('stay', trip);
+    try { await _onSave('stay', trip); } catch(e) { console.error('Save stay failed:', e); alert('Save failed: ' + e.message); }
   } else {
     const label = document.getElementById('pEventLabel').value.trim();
     const start = parseYMD(document.getElementById('pEventStart').value);
@@ -296,7 +296,7 @@ function saveEntry() {
       return;
     }
     const event = { id: popupEditEventId || undefined, type: 'event', label, start, end, color: selectedColor, note, source: 'manual' };
-    _onSave('event', event);
+    try { await _onSave('event', event); } catch(e) { console.error('Save event failed:', e); alert('Save failed: ' + e.message); }
   }
 }
 

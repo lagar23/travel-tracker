@@ -24,6 +24,8 @@ function summaryLine(booking) {
     route = ` — ${from} → ${to}`;
   } else if (booking.type === 'accommodation' && booking.inbound?.destination) {
     route = ` — ${safe(booking.inbound.destination)}`;
+  } else if (booking.subject) {
+    route = ` — ${safe(booking.subject.slice(0, 60))}`;
   }
   const date = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
   const ref  = booking.ref ? ` · Ref: ${safe(booking.ref)}` : '';
