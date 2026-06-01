@@ -135,6 +135,9 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
   background: #fff; color: #3d2b1f;
 }
 .field input:focus, .field select:focus { outline: 2px solid #8aacc8; border-color: transparent; }
+.field input[type=date] { cursor: pointer; }
+.field input[type=date]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+.trip-table input[type=date] { width: 120px; font-size: 10px; font-family: inherit; border: 1px solid #d4c8bc; border-radius: 4px; padding: 3px 5px; background: #fff; color: #3d2b1f; cursor: pointer; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
 .field-row .field { margin-bottom: 0; }
 .color-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }

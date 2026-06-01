@@ -71,9 +71,10 @@ export function dateToYMD(d) {
     String(d.getDate()).padStart(2,'0');
 }
 
-// Display format: YYYY/MM/DD
-export function fmtYMD(s) { return s.slice(0,4)+'/'+s.slice(4,6)+'/'+s.slice(6,8); }
-export function parseYMD(s) { return s.replace(/\//g,''); }
+// Format for input[type=date]: YYYY-MM-DD
+export function fmtYMD(s) { return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8); }
+// Strip both slashes and dashes so YYYY-MM-DD and YYYY/MM/DD both → YYYYMMDD
+export function parseYMD(s) { return s.replace(/[-/]/g,''); }
 
 export function calKey(year, month, day) {
   return String(year) + String(month+1).padStart(2,'0') + String(day).padStart(2,'0');

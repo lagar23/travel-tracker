@@ -313,8 +313,8 @@ function renderDrawer(stays, events) {
     const labelEl = past
       ? `<span style="display:flex;align-items:center;">${dot}${s.flag} ${s.label}</span>`
       : `<span style="display:flex;align-items:center;gap:3px;">${dot}${s.flag} <input type="text" class="wide" value="${s.label.replace(/"/g,'&quot;')}"></span>`;
-    const dateStart = past ? `<span class="readonly">${startFmt}</span>` : `<input type="text" value="${startFmt}">`;
-    const dateEnd   = past ? `<span class="readonly">${endFmt}</span>`   : `<input type="text" value="${endFmt}">`;
+    const dateStart = past ? `<span class="readonly">${startFmt}</span>` : `<input type="date" value="${startFmt}">`;
+    const dateEnd   = past ? `<span class="readonly">${endFmt}</span>`   : `<input type="date" value="${endFmt}">`;
     const statusEl = past
       ? `<span class="status-badge status-done">✓ done</span>`
       : s.booked
@@ -334,8 +334,8 @@ function renderDrawer(stays, events) {
     const labelVal = e.label.replace(/"/g,'&quot;');
     return `<tr data-eid="${e.id}">
       <td><span style="display:flex;align-items:center;">${dot}<input type="text" class="wide" value="${labelVal}"></span></td>
-      <td><input type="text" value="${fmtYMD(e.start)}"></td>
-      <td><input type="text" value="${fmtYMD(e.end)}"></td>
+      <td><input type="date" value="${fmtYMD(e.start)}"></td>
+      <td><input type="date" value="${fmtYMD(e.end)}"></td>
       <td style="white-space:nowrap;"><input type="text" class="wide" value="${noteVal}" placeholder="url or note">
         <button class="status-badge" style="background:#f0ddd0;color:#6b2000;cursor:pointer;" data-deleteeid="${e.id}">✕</button></td>
     </tr>`;
