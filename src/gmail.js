@@ -69,7 +69,16 @@ function decodeBody(msg) {
     if (part.parts) return part.parts.map(decode).join('');
     return '';
   }
-  return decode(msg.payload);
+  const raw = decode(msg.payload);
+  // Strip HTML tags, replace block-level tags with spaces so adjacent text doesn't merge
+  return raw
+    .replace(/<(br|td|th|li|p|div|tr|h[1-6])[^>]*>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ');
 }
 
 function gmailUrl(id) {
@@ -85,35 +94,31 @@ function validRoute(origin, dest) {
 // Tries multiple patterns to extract a valid {origin, dest} pair from email body.
 // Returns city names where possible, falling back to IATA codes.
 function extractRoute(body) {
-  // Normalise whitespace so newlines don't break multi-token patterns
-  const flat = body.replace(/\s+/g, ' ');
-
   // City (IATA) to/→/- City (IATA) — "Dublin (DUB) to Madrid (MAD)"
-  const cityIata = flat.match(/([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)\s*(?:to|[-–→])\s*([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)/);
+  const cityIata = body.match(/([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)\s*(?:to|[-–→])\s*([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)/);
   if (cityIata && validRoute(cityIata[2], cityIata[4])) {
     return { origin: cityIata[1].trim(), dest: cityIata[3].trim() };
   }
   // IATA (City) to IATA (City) — "DUB (Dublin) → MAD (Madrid)"
-  const iataCity = flat.match(/\b([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)/);
+  const iataCity = body.match(/\b([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)/);
   if (iataCity && validRoute(iataCity[1], iataCity[3])) {
     return { origin: iataCity[2].trim(), dest: iataCity[4].trim() };
   }
   // Bare IATA arrow: MAD → DUB
-  const arrow = flat.match(/\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/);
+  const arrow = body.match(/\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/);
   if (arrow && validRoute(arrow[1], arrow[2])) {
     return { origin: airportCity(arrow[1]), dest: airportCity(arrow[2]) };
   }
-  // "from Dublin to Madrid" / "from DUB to MAD"
-  const fromTo = flat.match(/\bfrom\s+([A-Za-z][A-Za-z ]{1,20}?)\s+to\s+([A-Za-z][A-Za-z ]{1,20}?)(?:\s*[,(]|\s*$)/i);
+  // "from Dublin to Madrid"
+  const fromTo = body.match(/\bfrom\s+([A-Za-z][A-Za-z ]{1,20}?)\s+to\s+([A-Za-z][A-Za-z ]{1,20}?)(?:\s*[,(]|\s*$)/i);
   if (fromTo) {
     const o = fromTo[1].trim(), d = fromTo[2].trim();
-    // Accept if they look like city names (not random words) — at least 3 chars, start uppercase
     if (o.length >= 3 && d.length >= 3 && /^[A-Z]/.test(o) && /^[A-Z]/.test(d)) {
       return { origin: o, dest: d };
     }
   }
   // Bare "XXX to YYY" IATA codes
-  const toForm = flat.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
+  const toForm = body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
   if (toForm && validRoute(toForm[1], toForm[2])) {
     return { origin: airportCity(toForm[1]), dest: airportCity(toForm[2]) };
   }
