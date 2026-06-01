@@ -435,8 +435,12 @@ export async function scanGmail(accessToken, stays) {
     }
   }
 
-  const newLastId = ids[0];
-  localStorage.setItem(LAST_ID_KEY, newLastId);
+  // Store a YYYY/MM/DD date cursor (Gmail's after: operator expects a date, not a message ID)
+  const newestMsg = messages[0];
+  const cursorDate = newestMsg?.internalDate
+    ? new Date(parseInt(newestMsg.internalDate)).toISOString().slice(0, 10).replace(/-/g, '/')
+    : null;
+  if (cursorDate) localStorage.setItem(LAST_ID_KEY, cursorDate);
 
-  return { matched, unmatched, lastMessageId: newLastId };
+  return { matched, unmatched, lastMessageId: cursorDate };
 }
