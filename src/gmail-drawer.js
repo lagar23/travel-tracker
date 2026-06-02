@@ -62,8 +62,8 @@ function renderGroup(group, gIdx) {
   const { booking, stays, key } = group;
   const multipleStays = stays.length > 1;
 
-  // Default: all stays checked
-  if (!selectedStays[key]) selectedStays[key] = new Set(stays.map(s => s.id));
+  // Default: pre-check only the primary (destination) stay — user can check more
+  if (!selectedStays[key]) selectedStays[key] = new Set([stays[0].id]);
 
   const stayOptions = multipleStays
     ? `<div class="gmail-stay-options">
