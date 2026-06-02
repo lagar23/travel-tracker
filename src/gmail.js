@@ -22,8 +22,7 @@ export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
 
 const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|receipt|invoice|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
 
-const MAX_IDS = 500;
-const METADATA_CONCURRENCY = 50;
+const MAX_IDS = 100;
 const FULL_CONCURRENCY = 20;
 
 async function fetchMessageIds(token, afterDate, signal) {
@@ -44,13 +43,6 @@ async function fetchMessageIds(token, afterDate, signal) {
 }
 
 // Cheap fetch: headers only (subject + from). Used to pre-filter before full body fetch.
-async function fetchMetadata(token, id, signal) {
-  const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
-  if (!res.ok) return null;
-  return res.json();
-}
-
 async function fetchFullMessage(token, id, signal) {
   const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
@@ -58,35 +50,17 @@ async function fetchFullMessage(token, id, signal) {
   return res.json();
 }
 
-async function runConcurrent(items, fn, concurrency, signal) {
+async function fetchMessages(token, ids, signal, onProgress) {
+  onProgress?.(`reading ${ids.length} emails…`);
   const results = [];
-  for (let i = 0; i < items.length; i += concurrency) {
+  for (let i = 0; i < ids.length; i += FULL_CONCURRENCY) {
     if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
-    const batch = items.slice(i, i + concurrency);
-    const fetched = await Promise.all(batch.map(item => fn(item)));
-    results.push(...fetched);
+    const batch = ids.slice(i, i + FULL_CONCURRENCY);
+    const fetched = await Promise.all(batch.map(id => fetchFullMessage(token, id, signal)));
+    results.push(...fetched.filter(Boolean));
+    onProgress?.(`read ${Math.min(i + FULL_CONCURRENCY, ids.length)} / ${ids.length}…`);
   }
   return results;
-}
-
-async function fetchMessages(token, ids, signal, onProgress) {
-  // Step 1: fetch metadata (subject+from) for all IDs concurrently — cheap
-  const metas = await runConcurrent(ids, id => fetchMetadata(token, id, signal), METADATA_CONCURRENCY, signal);
-
-  // Step 2: filter to only emails that could be bookings
-  const candidates = metas.filter(m => {
-    if (!m) return false;
-    const sender  = getHeader(m, 'from').toLowerCase();
-    const subject = getHeader(m, 'subject');
-    if (NON_BOOKING_SUBJECT.test(subject)) return false;
-    return PARSERS.some(p => p.test(sender, subject));
-  });
-
-  onProgress?.(`${candidates.length} booking emails, reading…`);
-
-  // Step 3: fetch full body only for candidates
-  const full = await runConcurrent(candidates, m => fetchFullMessage(token, m.id, signal), FULL_CONCURRENCY, signal);
-  return full.filter(Boolean);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
