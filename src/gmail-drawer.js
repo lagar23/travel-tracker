@@ -17,17 +17,21 @@ function fmtDate(ymd) {
 function summaryLine(booking) {
   const icon    = TYPE_ICON[booking.type] ?? '📋';
   const carrier = safe(booking.inbound?.carrier || booking.type);
+  const date    = booking.dateStart ? fmtDate(booking.dateStart) : '';
+  const ref     = booking.ref ? safe(booking.ref) : '';
+
+  if (booking.type === 'accommodation') {
+    const where = safe(booking.inbound?.destination || '');
+    return `${icon} ${carrier}${where ? ` · ${where}` : ''}${date ? ` · ${date}` : ''}${ref ? ` · ${ref}` : ''}`;
+  }
+
+  // flights / trains / buses: date · route · ref
   let route = '';
   if (booking.inbound?.origin && booking.inbound?.destination) {
-    const from = safe(airportCity(booking.inbound.origin));
-    const to   = safe(airportCity(booking.inbound.destination));
-    route = ` · ${from} → ${to}`;
-  } else if (booking.type === 'accommodation' && booking.inbound?.destination) {
-    route = ` · ${safe(booking.inbound.destination)}`;
+    route = `${safe(airportCity(booking.inbound.origin))} → ${safe(airportCity(booking.inbound.destination))}`;
   }
-  const date = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
-  const ref  = booking.ref ? ` · ${safe(booking.ref)}` : '';
-  return `${icon} ${carrier}${route}${date}${ref}`;
+  const parts = [carrier, date, route, ref].filter(Boolean);
+  return `${icon} ${parts.join(' · ')}`;
 }
 
 function matchLine(booking, stay) {

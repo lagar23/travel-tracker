@@ -97,14 +97,15 @@ function validRoute(origin, dest) {
 // Returns city names where possible, falling back to IATA codes.
 function extractRoute(body) {
   // City (IATA) to/→/- City (IATA) — "Dublin (DUB) to Madrid (MAD)"
-  const cityIata = body.match(/([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)\s*(?:to|[-–→])\s*([A-Za-z][A-Za-z '\-]{1,30}?)\s*\(([A-Z]{3})\)/);
-  if (cityIata && validRoute(cityIata[2], cityIata[4])) {
-    return { origin: cityIata[1].trim(), dest: cityIata[3].trim(), originIata: cityIata[2], destIata: cityIata[4] };
+  // Use IATA map for city name — don't trust captured text (may include email noise like "Hello Laura")
+  const cityIata = body.match(/[A-Za-z][A-Za-z '\-]{1,30}?\s*\(([A-Z]{3})\)\s*(?:to|[-–→])\s*[A-Za-z][A-Za-z '\-]{1,30}?\s*\(([A-Z]{3})\)/);
+  if (cityIata && validRoute(cityIata[1], cityIata[2])) {
+    return { origin: airportCity(cityIata[1]), dest: airportCity(cityIata[2]), originIata: cityIata[1], destIata: cityIata[2] };
   }
   // IATA (City) to IATA (City) — "DUB (Dublin) → MAD (Madrid)"
-  const iataCity = body.match(/\b([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\(([A-Za-z][A-Za-z '\-]{1,30}?)\)/);
-  if (iataCity && validRoute(iataCity[1], iataCity[3])) {
-    return { origin: iataCity[2].trim(), dest: iataCity[4].trim(), originIata: iataCity[1], destIata: iataCity[3] };
+  const iataCity = body.match(/\b([A-Z]{3})\s*\([A-Za-z][A-Za-z '\-]{1,30}?\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\([A-Za-z][A-Za-z '\-]{1,30}?\)/);
+  if (iataCity && validRoute(iataCity[1], iataCity[2])) {
+    return { origin: airportCity(iataCity[1]), dest: airportCity(iataCity[2]), originIata: iataCity[1], destIata: iataCity[2] };
   }
   // Bare IATA arrow: MAD → DUB
   const arrow = body.match(/\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/);
