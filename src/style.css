@@ -206,7 +206,7 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
   border: 1px solid #e0d4c0; background: #faf6f0;
 }
 .gmail-stay-option.selected { background: #e8f0e4; border-color: #8ab890; color: #2e5030; font-weight: 600; }
-.gmail-stay-option input[type=radio] { accent-color: #4a8050; }
+.gmail-stay-option input[type=checkbox] { accent-color: #4a8050; flex-shrink: 0; }
 .gmail-bar-rescan {
   cursor: pointer;
   text-decoration: underline;

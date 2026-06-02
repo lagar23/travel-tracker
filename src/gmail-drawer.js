@@ -5,8 +5,8 @@ let _onDismiss = null;
 let _currentSuggestions = null;
 let _currentStays = null;
 
-// selectedStay[groupKey] = stayId of the currently selected option
-const selectedStay = {};
+// selectedStays[groupKey] = Set of stayIds checked by the user
+const selectedStays = {};
 
 const TYPE_ICON = { flight: '✈️', accommodation: '🏠', train: '🚂', bus: '🚌' };
 
@@ -62,15 +62,15 @@ function renderGroup(group, gIdx) {
   const { booking, stays, key } = group;
   const multipleStays = stays.length > 1;
 
-  // Default selection
-  if (!selectedStay[key]) selectedStay[key] = stays[0].id;
+  // Default: all stays checked
+  if (!selectedStays[key]) selectedStays[key] = new Set(stays.map(s => s.id));
 
   const stayOptions = multipleStays
     ? `<div class="gmail-stay-options">
-        <div style="font-size:9px;color:#9a8070;margin-bottom:4px;">Which trip does this belong to?</div>
+        <div style="font-size:9px;color:#9a8070;margin-bottom:4px;">Assign to trip(s):</div>
         ${stays.map(s => `
-          <label class="gmail-stay-option ${selectedStay[key] === s.id ? 'selected' : ''}" data-gidx="${gIdx}" data-stayid="${s.id}">
-            <input type="radio" name="stay-${gIdx}" value="${s.id}" ${selectedStay[key] === s.id ? 'checked' : ''} style="margin-right:5px;">
+          <label class="gmail-stay-option ${selectedStays[key].has(s.id) ? 'selected' : ''}" data-gidx="${gIdx}" data-stayid="${s.id}">
+            <input type="checkbox" value="${s.id}" ${selectedStays[key].has(s.id) ? 'checked' : ''} style="margin-right:5px;accent-color:#4a8050;">
             ${stayLabel(s)}
           </label>`).join('')}
        </div>`
@@ -124,16 +124,31 @@ function renderList() {
 function wireButtons(groups) {
   const list = document.getElementById('gmailSuggestionList');
 
-  // Radio selection
+  // Checkbox toggle
   list.querySelectorAll('.gmail-stay-option').forEach(label => {
-    label.addEventListener('click', () => {
+    label.addEventListener('click', (e) => {
+      // don't double-fire from the checkbox itself
+      if (e.target.tagName === 'INPUT') return;
       const gIdx   = parseInt(label.dataset.gidx);
       const stayId = label.dataset.stayid;
       const key    = groups[gIdx]?.key;
-      if (key) {
-        selectedStay[key] = stayId;
-        renderList();
-      }
+      if (!key) return;
+      const set = selectedStays[key];
+      if (set.has(stayId)) { if (set.size > 1) set.delete(stayId); } // keep at least one
+      else set.add(stayId);
+      renderList();
+    });
+    label.querySelector('input[type=checkbox]')?.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const gIdx   = parseInt(label.dataset.gidx);
+      const stayId = label.dataset.stayid;
+      const key    = groups[gIdx]?.key;
+      if (!key) return;
+      const set = selectedStays[key];
+      if (e.target.checked) set.add(stayId);
+      else if (set.size > 1) set.delete(stayId);
+      else e.target.checked = true; // prevent unchecking the last one
+      renderList();
     });
   });
 
@@ -142,8 +157,9 @@ function wireButtons(groups) {
       const gIdx  = parseInt(btn.dataset.gidx);
       const group = groups[gIdx];
       if (!group) return;
-      const stay = group.stays.find(s => s.id === selectedStay[group.key]) ?? group.stays[0];
-      _onAccept('accept', group.booking, stay);
+      const checkedStays = group.stays.filter(s => selectedStays[group.key]?.has(s.id));
+      // Accept for each checked stay
+      checkedStays.forEach(stay => _onAccept('accept', group.booking, stay));
     });
   });
 
@@ -152,7 +168,8 @@ function wireButtons(groups) {
       const gIdx  = parseInt(btn.dataset.gidx);
       const group = groups[gIdx];
       if (!group) return;
-      const stay = group.stays.find(s => s.id === selectedStay[group.key]) ?? group.stays[0];
+      // Edit opens for the first checked stay
+      const stay = group.stays.find(s => selectedStays[group.key]?.has(s.id)) ?? group.stays[0];
       _onAccept('edit', group.booking, stay);
     });
   });
@@ -162,13 +179,11 @@ function wireButtons(groups) {
       const gIdx  = parseInt(btn.dataset.gidx);
       const group = groups[gIdx];
       if (!group) return;
-      // Remove all matched entries for this booking
       const key = group.key;
-      const ref = group.booking.ref || group.booking.gmailUrl;
       _currentSuggestions.matched = _currentSuggestions.matched.filter(
         m => (m.booking.ref || m.booking.gmailUrl) + '|' + m.booking.dateStart !== key
       );
-      delete selectedStay[key];
+      delete selectedStays[key];
       renderList();
       _onDismiss(group.booking);
     });
