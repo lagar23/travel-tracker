@@ -25,12 +25,27 @@ const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|ga
 const MAX_IDS = 100;
 const FULL_CONCURRENCY = 20;
 
+function fetchWithTimeout(url, opts, ms = 15000) {
+  const timer = new AbortController();
+  const id = setTimeout(() => timer.abort(), ms);
+  const combined = opts.signal
+    ? anySignal([opts.signal, timer.signal])
+    : timer.signal;
+  return fetch(url, { ...opts, signal: combined }).finally(() => clearTimeout(id));
+}
+
+function anySignal(signals) {
+  const ctrl = new AbortController();
+  for (const s of signals) s.addEventListener('abort', () => ctrl.abort(), { once: true });
+  return ctrl.signal;
+}
+
 async function fetchMessageIds(token, afterDate, signal) {
   const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;
-  // Request exactly MAX_IDS — no pagination needed
   const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${MAX_IDS}&q=${encodeURIComponent(q)}`;
   if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
+  const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${token}` }, signal });
+  if (res.status === 401 || res.status === 403) throw Object.assign(new Error('Auth'), { code: 'NO_GMAIL_SCOPE' });
   if (!res.ok) throw Object.assign(new Error('Gmail fetch failed'), { status: res.status });
   const data = await res.json();
   return (data.messages || []).map(m => m.id);
@@ -38,7 +53,8 @@ async function fetchMessageIds(token, afterDate, signal) {
 
 async function fetchFullMessage(token, id, signal) {
   const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
+  const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${token}` }, signal });
+  if (res.status === 401 || res.status === 403) throw Object.assign(new Error('Auth'), { code: 'NO_GMAIL_SCOPE' });
   if (!res.ok) return null;
   return res.json();
 }
@@ -604,12 +620,18 @@ export async function scanGmail(accessToken, stays, signal, onProgress) {
   const messages = await fetchMessages(accessToken, ids, signal, onProgress);
   const rawBookings = messages.map(parseMessage).filter(Boolean);
 
-  // Deduplicate by ref+date — keep the one with a route (more data wins)
+  // Deduplicate by ref alone — same booking ref from multiple emails (e.g. confirmation + check-in).
+  // Keep the one with: (1) a route, (2) the most recent plausible date.
   const seen = new Map();
   for (const b of rawBookings) {
-    const k = (b.ref || b.gmailUrl) + '|' + b.dateStart;
+    const k = b.ref || b.gmailUrl;
     const existing = seen.get(k);
-    if (!existing || (!existing.inbound?.origin && b.inbound?.origin)) seen.set(k, b);
+    if (!existing) { seen.set(k, b); continue; }
+    const hasRoute    = !!b.inbound?.origin;
+    const hadRoute    = !!existing.inbound?.origin;
+    const newerDate   = b.dateStart > existing.dateStart;
+    // Prefer: has route > newer date
+    if ((!hadRoute && hasRoute) || (hadRoute === hasRoute && newerDate)) seen.set(k, b);
   }
   const bookings = [...seen.values()];
 
