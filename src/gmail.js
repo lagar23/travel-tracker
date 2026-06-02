@@ -22,9 +22,9 @@ export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
 
 const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|receipt|invoice|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
 
-const MAX_IDS = 200; // cap total emails scanned per run
-const METADATA_CONCURRENCY = 25;
-const FULL_CONCURRENCY = 10;
+const MAX_IDS = 500;
+const METADATA_CONCURRENCY = 50;
+const FULL_CONCURRENCY = 20;
 
 async function fetchMessageIds(token, afterDate, signal) {
   const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;
@@ -127,37 +127,46 @@ function validRoute(origin, dest) {
   return !!(o && d && AIRPORT_COUNTRY[o] && AIRPORT_COUNTRY[d]);
 }
 
+// Collect all IATA codes mentioned in the body that are in our map.
+function findAllIataCodes(body) {
+  const found = [];
+  const re = /\b([A-Z]{3})\b/g;
+  let m;
+  while ((m = re.exec(body)) !== null) {
+    if (AIRPORT_COUNTRY[m[1]]) found.push(m[1]);
+  }
+  return found;
+}
+
 // Tries multiple patterns to extract a valid {origin, dest} pair from email body.
-// Returns city names where possible, falling back to IATA codes.
+// Always uses IATA map for city names — never trusts free text from the email.
 function extractRoute(body) {
-  // City (IATA) to/→/- City (IATA) — "Dublin (DUB) to Madrid (MAD)"
-  // Use IATA map for city name — don't trust captured text (may include email noise like "Hello Laura")
-  const cityIata = body.match(/[A-Za-z][A-Za-z '\-]{1,30}?\s*\(([A-Z]{3})\)\s*(?:to|[-–→])\s*[A-Za-z][A-Za-z '\-]{1,30}?\s*\(([A-Z]{3})\)/);
-  if (cityIata && validRoute(cityIata[1], cityIata[2])) {
-    return { origin: airportCity(cityIata[1]), dest: airportCity(cityIata[2]), originIata: cityIata[1], destIata: cityIata[2] };
+  // Pattern 1: adjacent pair with separator — "...(DUB)... to ...(MAD)..."
+  // or "DUB (Dublin) → MAD (Madrid)"
+  // We only capture the IATA codes, look up names from map.
+  const pairA = body.match(/\(([A-Z]{3})\)\s*(?:to|[-–→])\s*[^(]{0,60}?\(([A-Z]{3})\)/);
+  if (pairA && validRoute(pairA[1], pairA[2])) {
+    return { origin: airportCity(pairA[1]), dest: airportCity(pairA[2]), originIata: pairA[1], destIata: pairA[2] };
   }
-  // IATA (City) to IATA (City) — "DUB (Dublin) → MAD (Madrid)"
-  const iataCity = body.match(/\b([A-Z]{3})\s*\([A-Za-z][A-Za-z '\-]{1,30}?\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\([A-Za-z][A-Za-z '\-]{1,30}?\)/);
-  if (iataCity && validRoute(iataCity[1], iataCity[2])) {
-    return { origin: airportCity(iataCity[1]), dest: airportCity(iataCity[2]), originIata: iataCity[1], destIata: iataCity[2] };
+  const pairB = body.match(/\b([A-Z]{3})\s*\([^)]{0,30}\)\s*(?:to|[-–→])\s*([A-Z]{3})\s*\(/);
+  if (pairB && validRoute(pairB[1], pairB[2])) {
+    return { origin: airportCity(pairB[1]), dest: airportCity(pairB[2]), originIata: pairB[1], destIata: pairB[2] };
   }
-  // Bare IATA arrow: MAD → DUB
+  // Pattern 2: bare IATA arrow — "MAD → DUB"
   const arrow = body.match(/\b([A-Z]{3})\s*[→–]\s*([A-Z]{3})\b/);
   if (arrow && validRoute(arrow[1], arrow[2])) {
     return { origin: airportCity(arrow[1]), dest: airportCity(arrow[2]), originIata: arrow[1], destIata: arrow[2] };
   }
-  // "from Dublin to Madrid" — require Title Case (not ALL CAPS like "HELLO LAURA")
-  const fromTo = body.match(/\bfrom\s+([A-Z][a-z][A-Za-z ]{1,20}?)\s+to\s+([A-Z][a-z][A-Za-z ]{1,20}?)(?:\s*[,(]|\s*$)/);
-  if (fromTo) {
-    const o = fromTo[1].trim(), d = fromTo[2].trim();
-    if (o.length >= 3 && d.length >= 3) {
-      return { origin: o, dest: d, originIata: null, destIata: null };
-    }
-  }
-  // Bare "XXX to YYY" IATA codes
+  // Pattern 3: bare "XXX to YYY" IATA codes
   const toForm = body.match(/\b([A-Z]{3})\s+to\s+([A-Z]{3})\b/);
   if (toForm && validRoute(toForm[1], toForm[2])) {
     return { origin: airportCity(toForm[1]), dest: airportCity(toForm[2]), originIata: toForm[1], destIata: toForm[2] };
+  }
+  // Pattern 4: find first two distinct known IATA codes in the body (last resort)
+  const codes = findAllIataCodes(body);
+  const unique = [...new Set(codes)];
+  if (unique.length >= 2) {
+    return { origin: airportCity(unique[0]), dest: airportCity(unique[1]), originIata: unique[0], destIata: unique[1] };
   }
   return null;
 }
