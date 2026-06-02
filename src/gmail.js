@@ -532,6 +532,25 @@ function matchBooking(booking, stays) {
   const destMatch   = candidates.find(s => s.country === destCountry);
   const originMatch = candidates.find(s => s.country === originCountry);
 
+  // Flight on last day of one stay AND first day of another — it's a departure.
+  // Prefer the stay that starts on this date (arriving stay), not the one ending.
+  if (booking.type === 'flight') {
+    const arrivingStay   = candidates.find(s => s.start === ds);
+    const departingStay  = candidates.find(s => s.end === ds && s.start !== ds);
+    if (arrivingStay && departingStay) {
+      // Connecting: show on both stays
+      return { primary: arrivingStay, secondary: departingStay };
+    }
+    if (arrivingStay) return { primary: arrivingStay, secondary: null };
+    // Flight on last day only — suggest the next stay instead
+    if (departingStay) {
+      const nextStay = stays
+        .filter(s => s.start >= ds && s !== departingStay)
+        .sort((a, b) => a.start.localeCompare(b.start))[0];
+      if (nextStay) return { primary: nextStay, secondary: null };
+    }
+  }
+
   // Connecting flight: origin and destination each match a different stay
   if (booking.type === 'flight' && destMatch && originMatch && destMatch !== originMatch) {
     return { primary: destMatch, secondary: originMatch };
@@ -539,17 +558,6 @@ function matchBooking(booking, stays) {
 
   if (destMatch) return { primary: destMatch, secondary: null };
   if (originMatch) return { primary: originMatch, secondary: null };
-
-  // Flight on last day of a stay — likely departure, suggest the next stay
-  if (booking.type === 'flight') {
-    const departureStay = candidates.find(s => s.end === ds);
-    if (departureStay) {
-      const nextStay = stays
-        .filter(s => s.start >= ds && s !== departureStay)
-        .sort((a, b) => a.start.localeCompare(b.start))[0];
-      if (nextStay) return { primary: nextStay, secondary: null };
-    }
-  }
 
   return { primary: candidates[0], secondary: null };
 }
