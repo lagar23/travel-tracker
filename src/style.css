@@ -53,9 +53,9 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 .d.today { outline: 2px solid #2e2010; outline-offset: -2px; }
 .d.notrip { background: #ede6d4; }
 
-.d-num-row { position: relative; display: flex; align-items: center; gap: 3px; overflow: hidden; white-space: nowrap; }
+.d-num-row { display: flex; align-items: center; gap: 3px; overflow: hidden; white-space: nowrap; }
 .d-num { font-size: 8px; font-weight: 700; line-height: 1; font-family: -apple-system, sans-serif; flex-shrink: 0; }
-.d-pin { position: absolute; top: 0; right: 0; width: 5px; height: 5px; background: #d94040; border-radius: 50%; flex-shrink: 0; }
+.d-pin { position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; background: #d94040; border-radius: 50%; }
 .d-loc { font-size: 7.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
 .d-note { font-size: 7px; line-height: 1.1; margin-top: 1px; opacity: 0.75; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
 
