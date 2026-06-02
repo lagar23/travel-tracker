@@ -101,11 +101,11 @@ export function renderCalendar(stays, events, viewYear, viewMonth, viewMonths, o
         const isToday = date.getTime() === TODAY.getTime();
         const t = dayMap[key];
         const customColor = t?.color;
-        const cls = 'd' + (past?' past':'') + (isToday?' today':'') + (customColor ? '' : ' ' + (t ? t.cssClass : 'notrip'));
         const needsPin = t && t.isFirst && !t.booked;
+        const cls = 'd' + (past?' past':'') + (isToday?' today':'') + (needsPin?' unbooked':'') + (customColor ? '' : ' ' + (t ? t.cssClass : 'notrip'));
         const flag = (t && t.isFirst && showFlag[key]) ? `${t.flag} ` : '';
         const locStr = (t && t.isFirst) ? `${flag}${t.label}` : '';
-        let inner = `${needsPin?'<span class="d-pin"></span>':''}<div class="d-num-row"><span class="d-num">${day}</span>${locStr ? `<span class="d-loc">${locStr}</span>` : ''}</div>`;
+        let inner = `<div class="d-num-row"><span class="d-num">${day}</span>${locStr ? `<span class="d-loc">${locStr}</span>` : ''}</div>`;
         if (t && t.isFirst && t.note) {
           const isUrl = t.note.startsWith('http://') || t.note.startsWith('https://');
           inner += `<span class="d-note">${isUrl ? '🔗' : t.note}</span>`;
