@@ -153,7 +153,7 @@ async function runGmailScan(fullRescan = false) {
       });
       return;
     }
-    const fresh = await scanGmail(token, stays, signal);
+    const fresh = await scanGmail(token, stays, signal, msg => setGmailBarState('scanning', { progress: msg }));
     applyAndShowSuggestions(fresh);
   } catch (err) {
     if (err.code === 'ABORTED') return; // user stopped it — bar already set by stopGmailScan

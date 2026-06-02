@@ -20,6 +20,12 @@ export const LAST_ID_KEY       = 'gmailLastMessageId';
 export const SUGGESTIONS_KEY   = 'gmailSuggestions';
 export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
 
+const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|receipt|invoice|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
+
+const MAX_IDS = 200; // cap total emails scanned per run
+const METADATA_CONCURRENCY = 25;
+const FULL_CONCURRENCY = 10;
+
 async function fetchMessageIds(token, afterDate, signal) {
   const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;
   const base = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${encodeURIComponent(q)}`;
@@ -33,26 +39,54 @@ async function fetchMessageIds(token, afterDate, signal) {
     const data = await res.json();
     if (data.messages) ids.push(...data.messages.map(m => m.id));
     pageToken = data.nextPageToken ?? null;
-  } while (pageToken);
-  return ids;
+  } while (pageToken && ids.length < MAX_IDS);
+  return ids.slice(0, MAX_IDS);
 }
 
-async function fetchMessage(token, id, signal) {
+// Cheap fetch: headers only (subject + from). Used to pre-filter before full body fetch.
+async function fetchMetadata(token, id, signal) {
+  const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function fetchFullMessage(token, id, signal) {
   const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
   if (!res.ok) return null;
   return res.json();
 }
 
-async function fetchMessages(token, ids, signal) {
+async function runConcurrent(items, fn, concurrency, signal) {
   const results = [];
-  for (let i = 0; i < ids.length; i += 10) {
+  for (let i = 0; i < items.length; i += concurrency) {
     if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
-    const batch = ids.slice(i, i + 10);
-    const fetched = await Promise.all(batch.map(id => fetchMessage(token, id, signal)));
-    results.push(...fetched.filter(Boolean));
+    const batch = items.slice(i, i + concurrency);
+    const fetched = await Promise.all(batch.map(item => fn(item)));
+    results.push(...fetched);
   }
   return results;
+}
+
+async function fetchMessages(token, ids, signal, onProgress) {
+  // Step 1: fetch metadata (subject+from) for all IDs concurrently — cheap
+  const metas = await runConcurrent(ids, id => fetchMetadata(token, id, signal), METADATA_CONCURRENCY, signal);
+
+  // Step 2: filter to only emails that could be bookings
+  const candidates = metas.filter(m => {
+    if (!m) return false;
+    const sender  = getHeader(m, 'from').toLowerCase();
+    const subject = getHeader(m, 'subject');
+    if (NON_BOOKING_SUBJECT.test(subject)) return false;
+    return PARSERS.some(p => p.test(sender, subject));
+  });
+
+  onProgress?.(`${candidates.length} booking emails, reading…`);
+
+  // Step 3: fetch full body only for candidates
+  const full = await runConcurrent(candidates, m => fetchFullMessage(token, m.id, signal), FULL_CONCURRENCY, signal);
+  return full.filter(Boolean);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -482,8 +516,6 @@ export function airportCountry(iata) {
 // Section 5: Parse + match logic + scanGmail export
 // ─────────────────────────────────────────────────────────────────────────────
 
-const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|receipt|invoice|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
-
 function parseMessage(msg) {
   const sender  = getHeader(msg, 'from').toLowerCase();
   const subject = getHeader(msg, 'subject');
@@ -546,10 +578,11 @@ function matchBooking(booking, stays) {
   return { primary: candidates[0], secondary: null };
 }
 
-export async function scanGmail(accessToken, stays, signal) {
+export async function scanGmail(accessToken, stays, signal, onProgress) {
   const lastId = localStorage.getItem(LAST_ID_KEY) ?? null;
   let ids;
   try {
+    onProgress?.('finding emails…');
     ids = await fetchMessageIds(accessToken, lastId, signal);
   } catch (err) {
     if (err.code === 'ABORTED' || err.name === 'AbortError') throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
@@ -559,7 +592,8 @@ export async function scanGmail(accessToken, stays, signal) {
 
   if (ids.length === 0) return { matched: [], unmatched: [], lastMessageId: lastId };
 
-  const messages = await fetchMessages(accessToken, ids, signal);
+  onProgress?.(`${ids.length} emails found, filtering…`);
+  const messages = await fetchMessages(accessToken, ids, signal, onProgress);
   const bookings = messages.map(parseMessage).filter(Boolean);
 
   const matched   = [];
