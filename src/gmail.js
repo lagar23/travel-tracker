@@ -468,8 +468,9 @@ export const AIRPORT_CITY = {
   ALA:'Almaty', TSE:'Astana',
 };
 
-export function airportCity(iata) {
-  return AIRPORT_CITY[iata?.toUpperCase()] ?? iata?.toUpperCase() ?? '';
+export function airportCity(code) {
+  if (!code) return '';
+  return AIRPORT_CITY[code.toUpperCase()] ?? code; // preserve original casing if not in map
 }
 
 export function airportCountry(iata) {
@@ -480,9 +481,12 @@ export function airportCountry(iata) {
 // Section 5: Parse + match logic + scanGmail export
 // ─────────────────────────────────────────────────────────────────────────────
 
+const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|receipt|invoice|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
+
 function parseMessage(msg) {
   const sender  = getHeader(msg, 'from').toLowerCase();
   const subject = getHeader(msg, 'subject');
+  if (NON_BOOKING_SUBJECT.test(subject)) return null;
   const body    = decodeBody(msg);
 
   for (const parser of PARSERS) {

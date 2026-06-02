@@ -25,10 +25,9 @@ function summaryLine(booking) {
   } else if (booking.type === 'accommodation' && booking.inbound?.destination) {
     route = ` · ${safe(booking.inbound.destination)}`;
   }
-  const date       = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
-  const ref        = booking.ref ? ` · Ref: ${safe(booking.ref)}` : '';
-  const flightNum  = booking.inbound?.ref ? ` · ${safe(booking.inbound.carrier)} ${safe(booking.inbound.ref)}` : '';
-  return `${icon} ${carrier}${route}${date}${ref}${flightNum}`;
+  const date = booking.dateStart ? ` · ${fmtDate(booking.dateStart)}` : '';
+  const ref  = booking.ref ? ` · ${safe(booking.ref)}` : '';
+  return `${icon} ${carrier}${route}${date}${ref}`;
 }
 
 function matchLine(booking, stay) {

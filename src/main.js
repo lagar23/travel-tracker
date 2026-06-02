@@ -130,7 +130,7 @@ async function runGmailScan(fullRescan = false) {
   if (fullRescan) {
     localStorage.removeItem(LAST_ID_KEY);
     localStorage.removeItem(SUGGESTIONS_KEY);
-    localStorage.removeItem(DISMISSED_REFS_KEY);
+    // deliberately keep DISMISSED_REFS_KEY — dismissed items should stay dismissed across rescans
   }
 
   // Restore persisted suggestions immediately while we (re)fetch

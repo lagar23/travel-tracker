@@ -23,10 +23,11 @@ export function setGmailBarState(state, opts = {}) {
 
 function timeSince() {
   if (!_lastScanMs) return 'just now';
+  const d    = new Date(_lastScanMs);
+  const hhmm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const secs = Math.round((Date.now() - _lastScanMs) / 1000);
-  if (secs < 60)  return 'just now';
-  if (secs < 3600) return `${Math.round(secs/60)} min ago`;
-  return `${Math.round(secs/3600)} hr ago`;
+  if (secs < 3600) return `${hhmm} (${secs < 60 ? 'just now' : Math.round(secs/60) + ' min ago'})`;
+  return `${hhmm}`;
 }
 
 function renderGmailBar() {
