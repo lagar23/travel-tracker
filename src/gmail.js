@@ -20,29 +20,22 @@ export const LAST_ID_KEY       = 'gmailLastMessageId';
 export const SUGGESTIONS_KEY   = 'gmailSuggestions';
 export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
 
-const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|receipt|invoice|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
+const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
 
 const MAX_IDS = 100;
 const FULL_CONCURRENCY = 20;
 
 async function fetchMessageIds(token, afterDate, signal) {
   const q = afterDate ? `${GMAIL_SEARCH} after:${afterDate}` : GMAIL_SEARCH;
-  const base = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${encodeURIComponent(q)}`;
-  const ids = [];
-  let pageToken = null;
-  do {
-    if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
-    const url = pageToken ? `${base}&pageToken=${pageToken}` : base;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
-    if (!res.ok) throw Object.assign(new Error('Gmail fetch failed'), { status: res.status });
-    const data = await res.json();
-    if (data.messages) ids.push(...data.messages.map(m => m.id));
-    pageToken = data.nextPageToken ?? null;
-  } while (pageToken && ids.length < MAX_IDS);
-  return ids.slice(0, MAX_IDS);
+  // Request exactly MAX_IDS — no pagination needed
+  const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${MAX_IDS}&q=${encodeURIComponent(q)}`;
+  if (signal?.aborted) throw Object.assign(new Error('Aborted'), { code: 'ABORTED' });
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
+  if (!res.ok) throw Object.assign(new Error('Gmail fetch failed'), { status: res.status });
+  const data = await res.json();
+  return (data.messages || []).map(m => m.id);
 }
 
-// Cheap fetch: headers only (subject + from). Used to pre-filter before full body fetch.
 async function fetchFullMessage(token, id, signal) {
   const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
