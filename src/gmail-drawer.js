@@ -5,6 +5,9 @@ let _onDismiss = null;
 let _currentSuggestions = null;
 let _currentStays = null;
 
+// selectedStay[groupKey] = stayId of the currently selected option
+const selectedStay = {};
+
 const TYPE_ICON = { flight: '✈️', accommodation: '🏠', train: '🚂', bus: '🚌' };
 
 const safe = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -12,6 +15,10 @@ const safe = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').repla
 function fmtDate(ymd) {
   if (!ymd) return '';
   return `${ymd.slice(0,4)}-${ymd.slice(4,6)}-${ymd.slice(6,8)}`;
+}
+
+function stayLabel(stay) {
+  return `${safe(stay.flag)} ${safe(stay.label)}, ${safe(stay.country)} · ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}`;
 }
 
 function summaryLine(booking) {
@@ -25,7 +32,6 @@ function summaryLine(booking) {
     return `${icon} ${carrier}${where ? ` · ${where}` : ''}${date ? ` · ${date}` : ''}${ref ? ` · ${ref}` : ''}`;
   }
 
-  // flights / trains / buses: date · route · ref
   let route = '';
   if (booking.inbound?.origin && booking.inbound?.destination) {
     route = `${safe(airportCity(booking.inbound.origin))} → ${safe(airportCity(booking.inbound.destination))}`;
@@ -34,90 +40,157 @@ function summaryLine(booking) {
   return `${icon} ${parts.join(' · ')}`;
 }
 
-function matchLine(booking, stay) {
-  if (!stay) return `<span style="color:#c06040;">No match found</span>`;
-  return `<span style="color:#2e7040;">→ ${safe(stay.flag)} ${safe(stay.label)}, ${safe(stay.country)} ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}</span>`;
+// Group matched items by booking identity so one booking = one row
+function groupMatched(matched) {
+  const groups = [];
+  const keyOf = item => (item.booking.ref || item.booking.gmailUrl) + '|' + item.booking.dateStart;
+  const seen = new Map();
+  for (const item of matched) {
+    const k = keyOf(item);
+    if (seen.has(k)) {
+      seen.get(k).stays.push(item.stay);
+    } else {
+      const g = { booking: item.booking, stays: [item.stay], key: k };
+      seen.set(k, g);
+      groups.push(g);
+    }
+  }
+  return groups;
 }
 
-function renderRow(item, index, isMatched) {
-  const { booking, stay } = isMatched ? item : { booking: item, stay: null };
-  const actionBtns = isMatched
-    ? `<button class="gmail-btn gmail-accept" data-idx="${index}">✓ Accept</button>
-       <button class="gmail-btn gmail-edit"   data-idx="${index}">✎ Edit</button>
-       <button class="gmail-btn gmail-dismiss" data-idx="${index}">✕</button>`
-    : `<button class="gmail-btn gmail-create" data-idx="${index}">+ Create stay</button>
-       <button class="gmail-btn gmail-dismiss" data-idx="${index}">✕</button>`;
+function renderGroup(group, gIdx) {
+  const { booking, stays, key } = group;
+  const multipleStays = stays.length > 1;
 
-  return `<div class="gmail-row" data-idx="${index}" data-matched="${isMatched}">
+  // Default selection
+  if (!selectedStay[key]) selectedStay[key] = stays[0].id;
+
+  const stayOptions = multipleStays
+    ? `<div class="gmail-stay-options">
+        <div style="font-size:9px;color:#9a8070;margin-bottom:4px;">Which trip does this belong to?</div>
+        ${stays.map(s => `
+          <label class="gmail-stay-option ${selectedStay[key] === s.id ? 'selected' : ''}" data-gidx="${gIdx}" data-stayid="${s.id}">
+            <input type="radio" name="stay-${gIdx}" value="${s.id}" ${selectedStay[key] === s.id ? 'checked' : ''} style="margin-right:5px;">
+            ${stayLabel(s)}
+          </label>`).join('')}
+       </div>`
+    : `<div class="gmail-match"><span style="color:#2e7040;">→ ${stayLabel(stays[0])}</span></div>`;
+
+  return `<div class="gmail-row" data-gidx="${gIdx}">
     <div class="gmail-row-body">
       <div class="gmail-summary">${summaryLine(booking)}</div>
-      <div class="gmail-match">${matchLine(booking, stay)}</div>
+      ${stayOptions}
       <a href="${safe(booking.gmailUrl)}" target="_blank" rel="noopener noreferrer" class="gmail-email-link">View email →</a>
     </div>
-    <div class="gmail-row-actions">${actionBtns}</div>
+    <div class="gmail-row-actions">
+      <button class="gmail-btn gmail-accept" data-gidx="${gIdx}">✓ Accept</button>
+      <button class="gmail-btn gmail-edit"   data-gidx="${gIdx}">✎ Edit</button>
+      <button class="gmail-btn gmail-dismiss" data-gidx="${gIdx}">✕</button>
+    </div>
+  </div>`;
+}
+
+function renderUnmatched(booking, idx) {
+  return `<div class="gmail-row" data-uidx="${idx}">
+    <div class="gmail-row-body">
+      <div class="gmail-summary">${summaryLine(booking)}</div>
+      <div class="gmail-match"><span style="color:#c06040;">No match found</span></div>
+      <a href="${safe(booking.gmailUrl)}" target="_blank" rel="noopener noreferrer" class="gmail-email-link">View email →</a>
+    </div>
+    <div class="gmail-row-actions">
+      <button class="gmail-btn gmail-create" data-uidx="${idx}">+ Create stay</button>
+      <button class="gmail-btn gmail-dismiss-u" data-uidx="${idx}">✕</button>
+    </div>
   </div>`;
 }
 
 function renderList() {
   const { matched, unmatched } = _currentSuggestions;
-  const rows = [
-    ...matched.map((item, i) => renderRow(item, i, true)),
-    ...unmatched.map((item, i) => renderRow(item, matched.length + i, false)),
-  ];
+  const groups = groupMatched(matched);
   const list = document.getElementById('gmailSuggestionList');
   const sub  = document.getElementById('gmailDrawerSubtitle');
-  const total = matched.length + unmatched.length;
-  sub.textContent = `${total} suggestion${total !== 1 ? 's' : ''} — ${matched.length} matched to existing stays, ${unmatched.length} unmatched.`;
-  list.innerHTML = rows.join('') || '<p style="padding:12px;color:#9a8070;font-size:11px;">All suggestions reviewed.</p>';
-  wireButtons();
+
+  const total = groups.length + unmatched.length;
+  sub.textContent = `${total} suggestion${total !== 1 ? 's' : ''} — ${groups.length} matched to existing stays, ${unmatched.length} unmatched.`;
+
+  list.innerHTML = [
+    ...groups.map((g, i) => renderGroup(g, i)),
+    ...unmatched.map((b, i) => renderUnmatched(b, i)),
+  ].join('') || '<p style="padding:12px;color:#9a8070;font-size:11px;">All suggestions reviewed.</p>';
+
+  wireButtons(groups);
 }
 
-function wireButtons() {
+function wireButtons(groups) {
   const list = document.getElementById('gmailSuggestionList');
+
+  // Radio selection
+  list.querySelectorAll('.gmail-stay-option').forEach(label => {
+    label.addEventListener('click', () => {
+      const gIdx   = parseInt(label.dataset.gidx);
+      const stayId = label.dataset.stayid;
+      const key    = groups[gIdx]?.key;
+      if (key) {
+        selectedStay[key] = stayId;
+        renderList();
+      }
+    });
+  });
 
   list.querySelectorAll('.gmail-accept').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx  = parseInt(btn.dataset.idx);
-      const item = _currentSuggestions.matched[idx];
-      if (!item) return;
-      _onAccept('accept', item.booking, item.stay);
+      const gIdx  = parseInt(btn.dataset.gidx);
+      const group = groups[gIdx];
+      if (!group) return;
+      const stay = group.stays.find(s => s.id === selectedStay[group.key]) ?? group.stays[0];
+      _onAccept('accept', group.booking, stay);
     });
   });
 
   list.querySelectorAll('.gmail-edit').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx  = parseInt(btn.dataset.idx);
-      const item = _currentSuggestions.matched[idx];
-      if (!item) return;
-      _onAccept('edit', item.booking, item.stay);
-    });
-  });
-
-  list.querySelectorAll('.gmail-create').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx     = parseInt(btn.dataset.idx);
-      const offset  = _currentSuggestions.matched.length;
-      const booking = _currentSuggestions.unmatched[idx - offset];
-      if (!booking) return;
-      _onAccept('create', booking, null);
+      const gIdx  = parseInt(btn.dataset.gidx);
+      const group = groups[gIdx];
+      if (!group) return;
+      const stay = group.stays.find(s => s.id === selectedStay[group.key]) ?? group.stays[0];
+      _onAccept('edit', group.booking, stay);
     });
   });
 
   list.querySelectorAll('.gmail-dismiss').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx     = parseInt(btn.dataset.idx);
-      const { matched, unmatched } = _currentSuggestions;
-      const isMatched = idx < matched.length;
-      let dismissedBooking;
-      if (isMatched) {
-        dismissedBooking = matched[idx]?.booking;
-        _currentSuggestions.matched.splice(idx, 1);
-      } else {
-        dismissedBooking = unmatched[idx - matched.length];
-        _currentSuggestions.unmatched.splice(idx - matched.length, 1);
-      }
+      const gIdx  = parseInt(btn.dataset.gidx);
+      const group = groups[gIdx];
+      if (!group) return;
+      // Remove all matched entries for this booking
+      const key = group.key;
+      const ref = group.booking.ref || group.booking.gmailUrl;
+      _currentSuggestions.matched = _currentSuggestions.matched.filter(
+        m => (m.booking.ref || m.booking.gmailUrl) + '|' + m.booking.dateStart !== key
+      );
+      delete selectedStay[key];
       renderList();
-      _onDismiss(dismissedBooking);
+      _onDismiss(group.booking);
+    });
+  });
+
+  list.querySelectorAll('.gmail-create').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx     = parseInt(btn.dataset.uidx);
+      const booking = _currentSuggestions.unmatched[idx];
+      if (!booking) return;
+      _onAccept('create', booking, null);
+    });
+  });
+
+  list.querySelectorAll('.gmail-dismiss-u').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx     = parseInt(btn.dataset.uidx);
+      const booking = _currentSuggestions.unmatched[idx];
+      if (!booking) return;
+      _currentSuggestions.unmatched.splice(idx, 1);
+      renderList();
+      _onDismiss(booking);
     });
   });
 }

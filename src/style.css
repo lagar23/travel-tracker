@@ -199,6 +199,14 @@ body { font-family: Georgia, serif; background: #e8e0cc; color: #2e2010; min-hei
 .gmail-edit    { background: #e4dcc8; }
 .gmail-dismiss { background: #f0ddd0; }
 .gmail-create  { background: #2e2010; color: #f5efe6; }
+.gmail-stay-options { margin: 4px 0 4px; }
+.gmail-stay-option {
+  display: flex; align-items: center; font-size: 10px; color: #6a5030;
+  padding: 3px 6px; border-radius: 4px; cursor: pointer; margin-bottom: 2px;
+  border: 1px solid #e0d4c0; background: #faf6f0;
+}
+.gmail-stay-option.selected { background: #e8f0e4; border-color: #8ab890; color: #2e5030; font-weight: 600; }
+.gmail-stay-option input[type=radio] { accent-color: #4a8050; }
 .gmail-bar-rescan {
   cursor: pointer;
   text-decoration: underline;
