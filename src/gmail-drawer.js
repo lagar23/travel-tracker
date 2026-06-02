@@ -36,7 +36,8 @@ function summaryLine(booking) {
   if (booking.inbound?.origin && booking.inbound?.destination) {
     route = `${safe(airportCity(booking.inbound.origin))} → ${safe(airportCity(booking.inbound.destination))}`;
   }
-  const parts = [carrier, date, route, ref].filter(Boolean);
+  const flightNum = booking.inbound?.flightNumber ? safe(booking.inbound.flightNumber) : '';
+  const parts = [carrier, date, route, flightNum, ref].filter(Boolean);
   return `${icon} ${parts.join(' · ')}`;
 }
 

@@ -88,6 +88,25 @@ function gmailUrl(id) {
   return `https://mail.google.com/mail/u/0/#inbox/${id}`;
 }
 
+// Extract flight number like "VY 1234", "EI231", "FR 1234", "IB3456"
+function extractFlightNumber(body, carrierCode) {
+  if (carrierCode) {
+    const re = new RegExp(`\\b(${carrierCode}\\s*\\d{3,4})\\b`, 'i');
+    const m = body.match(re);
+    if (m) return m[1].replace(/\s+/, ' ').toUpperCase();
+  }
+  const generic = body.match(/\b([A-Z]{2})\s*(\d{3,4})\b/);
+  if (generic && AIRLINE_CODES[generic[1]]) return `${generic[1]} ${generic[2]}`;
+  return null;
+}
+
+const AIRLINE_CODES = {
+  VY:'Vueling', EI:'Aer Lingus', FR:'Ryanair', IB:'Iberia', U2:'easyJet',
+  VU:'Volotea', LH:'Lufthansa', BA:'British Airways', KL:'KLM', AF:'Air France',
+  DY:'Norwegian', W6:'Wizz Air', TO:'Transavia', UA:'United', DL:'Delta',
+  AA:'American', EK:'Emirates', FZ:'flydubai', QR:'Qatar', TK:'Turkish',
+};
+
 function validRoute(origin, dest) {
   const o = origin?.toUpperCase();
   const d = dest?.toUpperCase();
@@ -152,9 +171,10 @@ const PARSERS = [
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
+      const flightNumber = extractFlightNumber(body, 'FR');
       return {
         type: 'flight',
-        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Ryanair' } : null,
+        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Ryanair', flightNumber } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
@@ -176,9 +196,10 @@ const PARSERS = [
       const dateM = body.match(/\b(\d{1,2})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
+      const flightNumber = extractFlightNumber(body, 'IB');
       return {
         type: 'flight',
-        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Iberia' } : null,
+        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Iberia', flightNumber } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
@@ -200,9 +221,10 @@ const PARSERS = [
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
+      const flightNumber = extractFlightNumber(body, 'VY');
       return {
         type: 'flight',
-        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Vueling' } : null,
+        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Vueling', flightNumber } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
@@ -224,9 +246,10 @@ const PARSERS = [
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
+      const flightNumber = extractFlightNumber(body, 'EI');
       return {
         type: 'flight',
-        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Aer Lingus' } : null,
+        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'Aer Lingus', flightNumber } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
@@ -248,9 +271,10 @@ const PARSERS = [
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
+      const flightNumber = extractFlightNumber(body, 'U2');
       return {
         type: 'flight',
-        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'easyJet' } : null,
+        inbound:  route ? { date: dateStart, origin: route.origin, destination: route.dest, ref: refM[1], carrier: 'easyJet', flightNumber } : null,
         outbound: null,
         dateStart,
         dateEnd: null,
@@ -578,7 +602,16 @@ export async function scanGmail(accessToken, stays, signal, onProgress) {
 
   onProgress?.(`${ids.length} emails found, filtering…`);
   const messages = await fetchMessages(accessToken, ids, signal, onProgress);
-  const bookings = messages.map(parseMessage).filter(Boolean);
+  const rawBookings = messages.map(parseMessage).filter(Boolean);
+
+  // Deduplicate by ref+date — keep the one with a route (more data wins)
+  const seen = new Map();
+  for (const b of rawBookings) {
+    const k = (b.ref || b.gmailUrl) + '|' + b.dateStart;
+    const existing = seen.get(k);
+    if (!existing || (!existing.inbound?.origin && b.inbound?.origin)) seen.set(k, b);
+  }
+  const bookings = [...seen.values()];
 
   const matched   = [];
   const unmatched = [];
