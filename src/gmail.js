@@ -16,7 +16,7 @@ const GMAIL_SEARCH = [
   'after:2024/01/01',
 ].join(' ');
 
-export const SCANNER_VERSION   = 'v10';
+export const SCANNER_VERSION   = 'v11';
 export const LAST_ID_KEY       = `gmailLastMessageId_${SCANNER_VERSION}`;
 export const SUGGESTIONS_KEY   = `gmailSuggestions_${SCANNER_VERSION}`;
 export const DISMISSED_REFS_KEY = 'gmailDismissedRefs'; // intentionally unversioned — dismissed stays dismissed
@@ -147,9 +147,8 @@ function extractRoute(body, subject = '') {
   // Pattern 0a: subject line IATA pair — "DUB-LIS", "MAD – BCN", "DUB - LIS 05 June"
   // Subject is the clearest signal — try it first before touching the body.
   const subjectPair = subject.match(/\b([A-Z]{3})\s*[-–→]\s*([A-Z]{3})\b/);
-  console.log(`[route] subj="${subject}" → pair=${subjectPair ? subjectPair[1]+'-'+subjectPair[2] : 'none'}`);
   if (subjectPair && validRoute(subjectPair[1], subjectPair[2])) {
-    return { origin: airportCity(subjectPair[1]), dest: airportCity(subjectPair[2]), originIata: subjectPair[1], destIata: subjectPair[2] };
+    return { origin: airportCity(subjectPair[1]), dest: airportCity(subjectPair[2]), originIata: subjectPair[1], destIata: subjectPair[2], fromSubject: true };
   }
 
   // Pattern 0b: Multi-leg connecting route in body — "DUB → BCN → LIS" (any separator)
@@ -240,6 +239,7 @@ const PARSERS = [
         dateEnd: null,
         country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         originCountry: route ? (airportCountry(route.originIata) ?? null) : null,
+        routeFromSubject: route?.fromSubject ?? false,
         ref: refM[1],
         subject,
         sender,
@@ -265,6 +265,7 @@ const PARSERS = [
         dateEnd: null,
         country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         originCountry: route ? (airportCountry(route.originIata) ?? null) : null,
+        routeFromSubject: route?.fromSubject ?? false,
         ref: refM[1],
         subject,
         sender,
@@ -290,6 +291,7 @@ const PARSERS = [
         dateEnd: null,
         country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         originCountry: route ? (airportCountry(route.originIata) ?? null) : null,
+        routeFromSubject: route?.fromSubject ?? false,
         ref: refM[1],
         subject,
         sender,
@@ -315,6 +317,7 @@ const PARSERS = [
         dateEnd: null,
         country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         originCountry: route ? (airportCountry(route.originIata) ?? null) : null,
+        routeFromSubject: route?.fromSubject ?? false,
         ref: refM[1],
         subject,
         sender,
@@ -340,6 +343,7 @@ const PARSERS = [
         dateEnd: null,
         country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         originCountry: route ? (airportCountry(route.originIata) ?? null) : null,
+        routeFromSubject: route?.fromSubject ?? false,
         ref: refM[1],
         subject,
         sender,
@@ -487,6 +491,7 @@ const PARSERS = [
         dateEnd: null,
         country: route ? (airportCountry(route.destIata) ?? airportCountry(route.dest)) : null,
         originCountry: route ? (airportCountry(route.originIata) ?? null) : null,
+        routeFromSubject: route?.fromSubject ?? false,
         ref: refM?.[1] || '',
         subject,
         sender,
@@ -664,17 +669,20 @@ export async function scanGmail(accessToken, stays, signal, onProgress) {
   const messages = await fetchMessages(accessToken, ids, signal, onProgress);
   const rawBookings = messages.map(parseMessage).filter(Boolean);
 
-  // Deduplicate by ref alone — same booking ref from multiple emails (e.g. confirmation + check-in).
-  // Keep the one with: (1) a route, (2) the most recent plausible date.
+  // Deduplicate by ref — same booking ref from multiple emails (confirmation + check-in etc).
+  // Priority: (1) route from subject > (2) has any route > (3) newer date.
   const seen = new Map();
   for (const b of rawBookings) {
     const k = b.ref || b.gmailUrl;
     const existing = seen.get(k);
     if (!existing) { seen.set(k, b); continue; }
+    const fromSubject    = !!b.routeFromSubject;
+    const hadFromSubject = !!existing.routeFromSubject;
     const hasRoute    = !!b.inbound?.origin;
     const hadRoute    = !!existing.inbound?.origin;
     const newerDate   = b.dateStart > existing.dateStart;
-    // Prefer: has route > newer date
+    if (fromSubject && !hadFromSubject) { seen.set(k, b); continue; }
+    if (hadFromSubject && !fromSubject) continue;
     if ((!hadRoute && hasRoute) || (hadRoute === hasRoute && newerDate)) seen.set(k, b);
   }
   const bookings = [...seen.values()];
