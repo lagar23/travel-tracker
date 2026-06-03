@@ -154,13 +154,22 @@ function wireButtons(groups) {
   });
 
   list.querySelectorAll('.gmail-accept').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const gIdx  = parseInt(btn.dataset.gidx);
       const group = groups[gIdx];
       if (!group) return;
       const checkedStays = group.stays.filter(s => selectedStays[group.key]?.has(s.id));
-      // Accept for each checked stay
-      checkedStays.forEach(stay => _onAccept('accept', group.booking, stay));
+      if (checkedStays.length === 0) {
+        console.warn('[gmail-drawer] Accept: no checked stays for key', group.key, selectedStays[group.key], group.stays.map(s => s.id));
+        return;
+      }
+      for (const stay of checkedStays) {
+        try {
+          await _onAccept('accept', group.booking, stay);
+        } catch (err) {
+          console.error('[gmail-drawer] Accept failed:', err);
+        }
+      }
     });
   });
 

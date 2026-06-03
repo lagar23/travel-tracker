@@ -143,9 +143,9 @@ function findAllIataCodes(body) {
 // Tries multiple patterns to extract a valid {origin, dest} pair from email body.
 // Always uses IATA map for city names — never trusts free text from the email.
 function extractRoute(body) {
-  // Pattern 0: Multi-leg connecting route — "DUB → BCN → LIS"
+  // Pattern 0: Multi-leg connecting route — "DUB → BCN → LIS" (any separator)
   // Use the first known airport as origin and the LAST as destination (skip layovers).
-  const arrowChains = body.match(/\b[A-Z]{3}\b(?:\s*[→–]\s*\b[A-Z]{3}\b)+/g);
+  const arrowChains = body.match(/\b[A-Z]{3}\b(?:\s*(?:[→–\->]|to)\s*\b[A-Z]{3}\b){2,}/g);
   if (arrowChains) {
     for (const chain of arrowChains) {
       const codes = (chain.match(/\b([A-Z]{3})\b/g) || []).filter(c => AIRPORT_COUNTRY[c]);
@@ -180,18 +180,20 @@ function extractRoute(body) {
   if (toForm && validRoute(toForm[1], toForm[2])) {
     return { origin: airportCity(toForm[1]), dest: airportCity(toForm[2]), originIata: toForm[1], destIata: toForm[2] };
   }
-  // Pattern 4: look for sequential legs — "DUB → BCN" and "BCN → LIS" as separate lines.
-  // Chain them: if two pairs share a midpoint, use first origin → last dest.
-  const allArrows = [...body.matchAll(/\b([A-Z]{3})\b\s*[→–]\s*\b([A-Z]{3})\b/g)];
-  const validPairs = allArrows.filter(m => validRoute(m[1], m[2])).map(m => [m[1], m[2]]);
+  // Pattern 4: look for sequential legs — "DUB → BCN" and "BCN → LIS" as separate occurrences.
+  // Covers any separator (→, –, -, >, "to"). Chain them if one's dest = next's origin.
+  const allPairs = [...body.matchAll(/\b([A-Z]{3})\b\s*(?:[→–\->]|to)\s*\b([A-Z]{3})\b/g)];
+  const validPairs = allPairs.filter(m => validRoute(m[1], m[2])).map(m => [m[1], m[2]]);
   if (validPairs.length >= 2) {
-    // Build chain: find a pair whose destination = next pair's origin
+    // Build chain: find any pair whose destination = another pair's origin
     for (let i = 0; i < validPairs.length - 1; i++) {
-      if (validPairs[i][1] === validPairs[i + 1][0]) {
-        const origin = validPairs[i][0];
-        const dest   = validPairs[i + 1][1];
-        if (validRoute(origin, dest)) {
-          return { origin: airportCity(origin), dest: airportCity(dest), originIata: origin, destIata: dest };
+      for (let j = i + 1; j < validPairs.length; j++) {
+        if (validPairs[i][1] === validPairs[j][0]) {
+          const origin = validPairs[i][0];
+          const dest   = validPairs[j][1];
+          if (validRoute(origin, dest)) {
+            return { origin: airportCity(origin), dest: airportCity(dest), originIata: origin, destIata: dest };
+          }
         }
       }
     }

@@ -208,9 +208,11 @@ function openDrawer() {
 function mergeBookingIntoStay(booking, stay) {
   if (booking.type === 'flight') {
     const leg = booking.inbound;
-    const isInbound = leg && stay.country && airportCountry(leg.destination) === stay.country;
+    // Use booking.country (destination country) to decide if this is inbound/outbound for this stay
+    const isInbound = booking.country && stay.country && booking.country === stay.country;
+    const flightNum = leg?.flightNumber || (leg ? `${leg.carrier} ${booking.ref}` : '');
     const flightObj = leg
-      ? { number: `${leg.carrier} ${leg.ref}`, booking_ref: booking.ref, confirmed: null, source: 'gmail' }
+      ? { number: flightNum, booking_ref: booking.ref, confirmed: null, source: 'gmail' }
       : null;
     return {
       ...stay,
