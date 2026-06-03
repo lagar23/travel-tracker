@@ -212,7 +212,7 @@ function mergeBookingIntoStay(booking, stay) {
     const isInbound = booking.country && stay.country && booking.country === stay.country;
     const flightNum = leg?.flightNumber || (leg ? `${leg.carrier} ${booking.ref}` : '');
     const flightObj = leg
-      ? { number: flightNum, booking_ref: booking.ref, confirmed: null, source: 'gmail' }
+      ? { number: flightNum, booking_ref: booking.ref, confirmed: null, source: 'gmail', gmailUrl: booking.gmailUrl }
       : null;
     return {
       ...stay,

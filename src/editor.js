@@ -118,6 +118,8 @@ function openPopupEditStay(evt, s, key) {
   document.getElementById('pFlightInRef').value  = s.flightInRef  || (s.flight_in?.booking_ref  || '');
   document.getElementById('pFlightOut').value    = s.flightOut    || (s.flight_out?.number || '');
   document.getElementById('pFlightOutRef').value = s.flightOutRef || (s.flight_out?.booking_ref || '');
+  updateFlightEmailLink('In',  s.flight_in?.gmailUrl  || null);
+  updateFlightEmailLink('Out', s.flight_out?.gmailUrl || null);
   document.getElementById('pAccomName').value    = s.accomName    || (s.accom?.name    || '');
   document.getElementById('pAccomAddr').value    = s.accomAddr    || (s.accom?.address || '');
   document.getElementById('pAccomRef').value     = s.accomRef     || (s.accom?.booking_ref || '');
@@ -154,6 +156,8 @@ function clearStayFields() {
   document.getElementById('pBookedStay').checked = false;
   document.getElementById('pCountry').value  = 'Spain|🇪🇸';
   document.getElementById('pAccomLink').style.display = 'none';
+  updateFlightEmailLink('In',  null);
+  updateFlightEmailLink('Out', null);
   selectedStayColor = null;
   syncStayColorUI();
   switchStayTab('info');
@@ -201,6 +205,14 @@ function switchStayTab(tab) {
     document.getElementById('stayTab'   + capT).classList.toggle('active', t===tab);
     document.getElementById('stayPanel' + capT).style.display = t===tab ? '' : 'none';
   });
+}
+
+function updateFlightEmailLink(direction, url) {
+  const wrap = document.getElementById(`pFlight${direction}EmailLink`);
+  const a    = document.getElementById(`pFlight${direction}EmailLinkA`);
+  if (!wrap) return;
+  if (url) { a.href = url; wrap.style.display = ''; }
+  else { wrap.style.display = 'none'; }
 }
 
 function updateAccomLink(val) {
