@@ -16,7 +16,7 @@ const GMAIL_SEARCH = [
   'after:2024/01/01',
 ].join(' ');
 
-export const SCANNER_VERSION   = 'v9';
+export const SCANNER_VERSION   = 'v10';
 export const LAST_ID_KEY       = `gmailLastMessageId_${SCANNER_VERSION}`;
 export const SUGGESTIONS_KEY   = `gmailSuggestions_${SCANNER_VERSION}`;
 export const DISMISSED_REFS_KEY = 'gmailDismissedRefs'; // intentionally unversioned — dismissed stays dismissed
@@ -146,11 +146,9 @@ function findAllIataCodes(body) {
 function extractRoute(body, subject = '') {
   // Pattern 0a: subject line IATA pair — "DUB-LIS", "MAD – BCN", "DUB - LIS 05 June"
   // Subject is the clearest signal — try it first before touching the body.
-  console.debug('[extractRoute] subject:', subject);
   const subjectPair = subject.match(/\b([A-Z]{3})\s*[-–→]\s*([A-Z]{3})\b/);
-  console.debug('[extractRoute] subjectPair:', subjectPair);
+  console.log(`[route] subj="${subject}" → pair=${subjectPair ? subjectPair[1]+'-'+subjectPair[2] : 'none'}`);
   if (subjectPair && validRoute(subjectPair[1], subjectPair[2])) {
-    console.debug('[extractRoute] → pattern 0a (subject):', subjectPair[1], subjectPair[2]);
     return { origin: airportCity(subjectPair[1]), dest: airportCity(subjectPair[2]), originIata: subjectPair[1], destIata: subjectPair[2] };
   }
 
