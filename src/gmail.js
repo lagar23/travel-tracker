@@ -16,7 +16,7 @@ const GMAIL_SEARCH = [
   'after:2024/01/01',
 ].join(' ');
 
-export const SCANNER_VERSION   = 'v11';
+export const SCANNER_VERSION   = 'v12';
 export const LAST_ID_KEY       = `gmailLastMessageId_${SCANNER_VERSION}`;
 export const SUGGESTIONS_KEY   = `gmailSuggestions_${SCANNER_VERSION}`;
 export const DISMISSED_REFS_KEY = 'gmailDismissedRefs'; // intentionally unversioned — dismissed stays dismissed
@@ -670,20 +670,37 @@ export async function scanGmail(accessToken, stays, signal, onProgress) {
   const rawBookings = messages.map(parseMessage).filter(Boolean);
 
   // Deduplicate by ref — same booking ref from multiple emails (confirmation + check-in etc).
-  // Priority: (1) route from subject > (2) has any route > (3) newer date.
+  // Merge the best route and the best date across all emails for the same ref.
+  const plausible = d => d && d >= '20200101'; // garbage dates like 1999-xx-xx are not plausible
   const seen = new Map();
   for (const b of rawBookings) {
     const k = b.ref || b.gmailUrl;
     const existing = seen.get(k);
     if (!existing) { seen.set(k, b); continue; }
+
     const fromSubject    = !!b.routeFromSubject;
     const hadFromSubject = !!existing.routeFromSubject;
     const hasRoute    = !!b.inbound?.origin;
     const hadRoute    = !!existing.inbound?.origin;
-    const newerDate   = b.dateStart > existing.dateStart;
-    if (fromSubject && !hadFromSubject) { seen.set(k, b); continue; }
-    if (hadFromSubject && !fromSubject) continue;
-    if ((!hadRoute && hasRoute) || (hadRoute === hasRoute && newerDate)) seen.set(k, b);
+
+    // Pick the better of the two entries, then patch in the best date
+    let winner;
+    if (fromSubject && !hadFromSubject) winner = b;
+    else if (hadFromSubject && !fromSubject) winner = existing;
+    else if (!hadRoute && hasRoute) winner = b;
+    else if (hadRoute && !hasRoute) winner = existing;
+    else winner = (b.dateStart > existing.dateStart) ? b : existing;
+
+    // Patch in best (most plausible) date from either email
+    const bestDate = plausible(winner.dateStart) ? winner.dateStart
+      : plausible(existing.dateStart) ? existing.dateStart
+      : plausible(b.dateStart) ? b.dateStart
+      : winner.dateStart;
+    if (bestDate !== winner.dateStart) {
+      winner = { ...winner, dateStart: bestDate, inbound: winner.inbound ? { ...winner.inbound, date: bestDate } : null };
+    }
+
+    seen.set(k, winner);
   }
   const bookings = [...seen.values()];
 
