@@ -18,7 +18,8 @@ function fmtDate(ymd) {
 }
 
 function stayLabel(stay) {
-  return `${safe(stay.flag)} ${safe(stay.label)}, ${safe(stay.country)} · ${stay.start.slice(0,4)}-${stay.start.slice(4,6)}-${stay.start.slice(6,8)} – ${stay.end.slice(4,6)}-${stay.end.slice(6,8)}`;
+  const s = stay.start, e = stay.end;
+  return `${safe(stay.flag)} ${safe(stay.label)}, ${safe(stay.country)} · ${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)} to ${e.slice(0,4)}-${e.slice(4,6)}-${e.slice(6,8)}`;
 }
 
 function summaryLine(booking) {
