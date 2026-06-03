@@ -140,10 +140,17 @@ function findAllIataCodes(body) {
   return found;
 }
 
-// Tries multiple patterns to extract a valid {origin, dest} pair from email body.
+// Tries multiple patterns to extract a valid {origin, dest} pair from email body + subject.
 // Always uses IATA map for city names — never trusts free text from the email.
-function extractRoute(body) {
-  // Pattern 0: Multi-leg connecting route — "DUB → BCN → LIS" (any separator)
+function extractRoute(body, subject = '') {
+  // Pattern 0a: subject line IATA pair — "DUB-LIS", "MAD – BCN", "DUB - LIS 05 June"
+  // Subject is the clearest signal — try it first before touching the body.
+  const subjectPair = subject.match(/\b([A-Z]{3})\s*[-–→]\s*([A-Z]{3})\b/);
+  if (subjectPair && validRoute(subjectPair[1], subjectPair[2])) {
+    return { origin: airportCity(subjectPair[1]), dest: airportCity(subjectPair[2]), originIata: subjectPair[1], destIata: subjectPair[2] };
+  }
+
+  // Pattern 0b: Multi-leg connecting route in body — "DUB → BCN → LIS" (any separator)
   // Use the first known airport as origin and the LAST as destination (skip layovers).
   const arrowChains = body.match(/\b[A-Z]{3}\b(?:\s*(?:[→–\->]|to)\s*\b[A-Z]{3}\b){2,}/g);
   if (arrowChains) {
@@ -218,7 +225,7 @@ const PARSERS = [
     test: (s) => s.includes('ryanair.com'),
     parse(body, subject, sender, msgId) {
       const refM  = subject.match(/\b([A-Z0-9]{6})\b/) || body.match(/booking\s+(?:reference|ref)[:\s]+([A-Z0-9]{6})/i);
-      const route = extractRoute(body);
+      const route = extractRoute(body, subject);
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
@@ -243,7 +250,7 @@ const PARSERS = [
     test: (s) => s.includes('iberia.com'),
     parse(body, subject, sender, msgId) {
       const refM  = body.match(/localizador[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
-      const route = extractRoute(body);
+      const route = extractRoute(body, subject);
       const dateM = body.match(/\b(\d{1,2})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
@@ -268,7 +275,7 @@ const PARSERS = [
     test: (s) => s.includes('vueling.com'),
     parse(body, subject, sender, msgId) {
       const refM  = body.match(/(?:booking\s+ref(?:erence)?|localizador|confirmation)[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
-      const route = extractRoute(body);
+      const route = extractRoute(body, subject);
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
@@ -293,7 +300,7 @@ const PARSERS = [
     test: (s) => s.includes('aerlingus.com'),
     parse(body, subject, sender, msgId) {
       const refM  = body.match(/booking\s+reference[:\s]+([A-Z0-9]{6})/i) || subject.match(/\b([A-Z0-9]{6})\b/);
-      const route = extractRoute(body);
+      const route = extractRoute(body, subject);
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
@@ -318,7 +325,7 @@ const PARSERS = [
     test: (s) => s.includes('easyjet.com'),
     parse(body, subject, sender, msgId) {
       const refM  = body.match(/booking\s+reference[:\s]+([A-Z0-9]{6,8})/i) || subject.match(/\b([A-Z0-9]{6,8})\b/);
-      const route = extractRoute(body);
+      const route = extractRoute(body, subject);
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!refM) return null;
       const dateStart = dateM ? normaliseDate(dateM[1], dateM[2], dateM[3]) : null;
@@ -465,7 +472,7 @@ const PARSERS = [
     name: 'generic-flight',
     test: (_s, subject) => /confirmation|booking|itinerary|billete/i.test(subject),
     parse(body, subject, sender, msgId) {
-      const route = extractRoute(body);
+      const route = extractRoute(body, subject);
       const refM  = body.match(/(?:booking\s+ref(?:erence)?|confirmation\s+(?:number|code)|localizador)[:\s]+([A-Z0-9]{5,12})/i);
       const dateM = body.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
       if (!route && !refM) return null;
