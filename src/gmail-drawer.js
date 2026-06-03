@@ -164,15 +164,16 @@ function wireButtons(groups) {
       const group = groups[gIdx];
       if (!group) return;
       const checkedStays = group.stays.filter(s => selectedStays[group.key]?.has(s.id));
-      if (checkedStays.length === 0) {
-        console.warn('[gmail-drawer] Accept: no checked stays for key', group.key, selectedStays[group.key], group.stays.map(s => s.id));
-        return;
-      }
+      if (checkedStays.length === 0) return;
+      // Immediately remove the row so user can't double-click
+      const row = btn.closest('.gmail-row');
+      if (row) { row.style.opacity = '0.4'; row.style.pointerEvents = 'none'; }
       for (const stay of checkedStays) {
         try {
           await _onAccept('accept', group.booking, stay);
         } catch (err) {
           console.error('[gmail-drawer] Accept failed:', err);
+          if (row) { row.style.opacity = ''; row.style.pointerEvents = ''; }
         }
       }
     });
