@@ -1,4 +1,4 @@
-import { airportCity } from './gmail.js';
+import { airportCity, SCANNER_VERSION } from './gmail.js';
 
 let _onAccept = null;
 let _onDismiss = null;
@@ -112,7 +112,7 @@ function renderList() {
   const sub  = document.getElementById('gmailDrawerSubtitle');
 
   const total = groups.length + unmatched.length;
-  sub.textContent = `${total} suggestion${total !== 1 ? 's' : ''} — ${groups.length} matched to existing stays, ${unmatched.length} unmatched.`;
+  sub.textContent = `${total} suggestion${total !== 1 ? 's' : ''} — ${groups.length} matched, ${unmatched.length} unmatched · scanner ${SCANNER_VERSION}`;
 
   list.innerHTML = [
     ...groups.map((g, i) => renderGroup(g, i)),

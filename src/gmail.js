@@ -16,9 +16,10 @@ const GMAIL_SEARCH = [
   'after:2024/01/01',
 ].join(' ');
 
-export const LAST_ID_KEY       = 'gmailLastMessageId';
-export const SUGGESTIONS_KEY   = 'gmailSuggestions';
-export const DISMISSED_REFS_KEY = 'gmailDismissedRefs';
+export const SCANNER_VERSION   = 'v8';
+export const LAST_ID_KEY       = `gmailLastMessageId_${SCANNER_VERSION}`;
+export const SUGGESTIONS_KEY   = `gmailSuggestions_${SCANNER_VERSION}`;
+export const DISMISSED_REFS_KEY = 'gmailDismissedRefs'; // intentionally unversioned — dismissed stays dismissed
 
 const NON_BOOKING_SUBJECT = /delay|delayed|cancell|disruption|flight\s+status|gate\s+change|check.in\s+open|now\s+open|boarding|reminder|survey|feedback|newsletter|unsubscribe|points|reward|earn|miles|upgrade|offer|deal|sale|discount|promo/i;
 
